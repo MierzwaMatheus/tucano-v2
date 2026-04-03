@@ -9,7 +9,7 @@ function generateId(): string {
 function getCompetence(
   purchaseDate: number,
   isCredit: boolean,
-  closingDay: number
+  closingDay: number,
 ): { competenceMonth: number; competenceYear: number } {
   const date = new Date(purchaseDate);
   const day = date.getDate();
@@ -42,7 +42,7 @@ export const listByPeriod = query({
         q
           .eq("userId", userId)
           .eq("competenceYear", args.year)
-          .eq("competenceMonth", args.month)
+          .eq("competenceMonth", args.month),
       )
       .order("desc")
       .collect();
@@ -52,7 +52,7 @@ export const listByPeriod = query({
         ...tx,
         category: tx.categoryId ? await ctx.db.get(tx.categoryId) : null,
         creditCard: tx.creditCardId ? await ctx.db.get(tx.creditCardId) : null,
-      }))
+      })),
     );
   },
 });
@@ -73,7 +73,7 @@ export const summarize = query({
         q
           .eq("userId", userId)
           .eq("competenceYear", args.year)
-          .eq("competenceMonth", args.month)
+          .eq("competenceMonth", args.month),
       )
       .filter((q) => q.eq(q.field("includeInStats"), true))
       .collect();
@@ -130,7 +130,7 @@ export const addTransaction = mutation({
     const { competenceMonth, competenceYear } = getCompetence(
       args.date,
       args.isCredit,
-      closingDay
+      closingDay,
     );
 
     if (!args.isRecurring && (!args.installments || args.installments <= 1)) {
@@ -177,7 +177,7 @@ export const addTransaction = mutation({
             competenceMonth: m,
             competenceYear: y,
             createdAt: Date.now(),
-          })
+          }),
         );
         m++;
         if (m > 12) {
@@ -219,7 +219,7 @@ export const addTransaction = mutation({
             competenceMonth: m,
             competenceYear: y,
             createdAt: Date.now(),
-          })
+          }),
         );
         m++;
         if (m > 12) {
@@ -288,14 +288,16 @@ export const deleteTransaction = mutation({
 
     const isRecurring = !!tx.recurringGroupId;
     const groupId = tx.recurringGroupId ?? tx.installmentGroupId;
-    const indexName = isRecurring ? "by_recurring_group" : "by_installment_group";
+    const indexName = isRecurring
+      ? "by_recurring_group"
+      : "by_installment_group";
 
     const siblings = await ctx.db
       .query("transactions")
       .withIndex(indexName, (q) =>
         isRecurring
           ? q.eq("recurringGroupId", groupId)
-          : q.eq("installmentGroupId", groupId)
+          : q.eq("installmentGroupId", groupId),
       )
       .collect();
 
@@ -303,7 +305,7 @@ export const deleteTransaction = mutation({
       (t) =>
         t.competenceYear > tx.competenceYear ||
         (t.competenceYear === tx.competenceYear &&
-          t.competenceMonth >= tx.competenceMonth)
+          t.competenceMonth >= tx.competenceMonth),
     );
 
     await Promise.all(toDelete.map((t) => ctx.db.delete(t._id)));

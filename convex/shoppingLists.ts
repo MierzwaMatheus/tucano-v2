@@ -36,7 +36,7 @@ export const getWithItems = query({
       items.map(async (item) => ({
         ...item,
         category: item.categoryId ? await ctx.db.get(item.categoryId) : null,
-      }))
+      })),
     );
 
     return { ...list, items: itemsWithCategory };
@@ -104,9 +104,60 @@ export const reopen = mutation({
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Não autenticado");
 
+    const list = await ctx.db.get(args.id);
+    if (!list || list.userId !== userId)
+      throw new Error("Lista não encontrada");
+
+    if (list.transactionId) {
+      await ctx.db.delete(list.transactionId);
+    }
+
     await ctx.db.patch(args.id, {
       status: "active",
       completedAt: undefined,
+      transactionId: undefined,
     });
+  },
+});
+
+export const complete = mutation({
+  args: {
+    id: v.id("shoppingLists"),
+    completedAt: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Não autenticado");
+
+    const list = await ctx.db.get(args.id);
+    if (!list || list.userId !== userId)
+      throw new Error("Lista não encontrada");
+
+    if (list.status === "completed") return list.transactionId;
+
+    const completedAt = args.completedAt ?? Date.now();
+
+    const txId = await ctx.db.insert("transactions", {
+      userId,
+      type: "expense",
+      name: list.name,
+      amountCents: list.totalCents,
+      date: completedAt,
+      status: "paid",
+      isCredit: false,
+      isRecurring: false,
+      includeInStats: true,
+      competenceMonth: list.month,
+      competenceYear: list.year,
+      createdAt: completedAt,
+    });
+
+    await ctx.db.patch(args.id, {
+      status: "completed",
+      completedAt,
+      transactionId: txId,
+    });
+
+    return txId;
   },
 });

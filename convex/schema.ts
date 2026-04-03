@@ -12,6 +12,7 @@ const applicationTables = {
     totalCents: v.number(),
     status: v.union(v.literal("active"), v.literal("completed")),
     completedAt: v.optional(v.number()),
+    transactionId: v.optional(v.id("transactions")),
     createdAt: v.number(),
   })
     .index("by_user", ["userId"])
@@ -30,7 +31,7 @@ const applicationTables = {
         priceCents: v.number(),
         date: v.number(),
         listId: v.id("shoppingLists"),
-      })
+      }),
     ),
     nameLower: v.string(),
     createdAt: v.number(),
@@ -80,10 +81,19 @@ const applicationTables = {
     createdAt: v.number(),
   })
     .index("by_user_period", ["userId", "competenceYear", "competenceMonth"])
-    .index("by_user_type_period", ["userId", "type", "competenceYear", "competenceMonth"])
+    .index("by_user_type_period", [
+      "userId",
+      "type",
+      "competenceYear",
+      "competenceMonth",
+    ])
     .index("by_recurring_group", ["recurringGroupId"])
     .index("by_installment_group", ["installmentGroupId"])
-    .index("by_card_period", ["creditCardId", "competenceYear", "competenceMonth"]),
+    .index("by_card_period", [
+      "creditCardId",
+      "competenceYear",
+      "competenceMonth",
+    ]),
 
   creditCards: defineTable({
     userId: v.id("users"),
@@ -102,7 +112,7 @@ const applicationTables = {
       v.literal("shopping"),
       v.literal("income"),
       v.literal("expense"),
-      v.literal("all")
+      v.literal("all"),
     ),
     color: v.optional(v.string()),
     icon: v.optional(v.string()),

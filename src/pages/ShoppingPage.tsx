@@ -51,6 +51,7 @@ function ListsOverview({
   const lists = useQuery(api.shoppingLists.list) ?? [];
   const createList = useMutation(api.shoppingLists.create);
   const removeList = useMutation(api.shoppingLists.remove);
+  const completeList = useMutation(api.shoppingLists.complete);
 
   const [showCreate, setShowCreate] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Id<"shoppingLists"> | null>(
@@ -190,7 +191,16 @@ function ListsOverview({
                     </div>
                   )}
                 </button>
-                <div className="px-4 pb-3 flex justify-end">
+                <div className="px-4 pb-3 flex justify-end gap-3">
+                  {list.status === "active" && (
+                    <button
+                      onClick={() => completeList({ id: list._id })}
+                      className="text-xs text-accent hover:text-accent-hover flex items-center gap-1 transition-colors"
+                    >
+                      <CheckCircle2 size={13} />
+                      Concluir
+                    </button>
+                  )}
                   <button
                     onClick={() => setDeleteTarget(list._id)}
                     className="text-xs text-text-muted hover:text-status-error flex items-center gap-1 transition-colors"
@@ -307,6 +317,7 @@ function ListDetail({
   const addItem = useMutation(api.shoppingItems.addItem);
   const togglePurchased = useMutation(api.shoppingItems.togglePurchased);
   const deleteItem = useMutation(api.shoppingItems.deleteItem);
+  const completeList = useMutation(api.shoppingLists.complete);
   const catalogResults = useQuery(api.productCatalog.search, { term: "" });
   const categories = useQuery(api.categories.list, { type: "shopping" }) ?? [];
 
@@ -435,6 +446,16 @@ function ListDetail({
           </>
         )}
       </div>
+
+      {list.status === "active" && (
+        <button
+          onClick={() => completeList({ id: list._id })}
+          className="w-full py-3 bg-accent text-surface-page rounded-button font-semibold hover:bg-accent-hover transition-colors mb-4"
+        >
+          <CheckCircle2 size={18} className="inline mr-2" />
+          Concluir Lista
+        </button>
+      )}
 
       {/* Add item button */}
       <button

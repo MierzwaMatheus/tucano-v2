@@ -90,29 +90,58 @@ export const togglePurchased = mutation({
     if (!item) throw new Error("Item não encontrado");
 
     const newState = !item.isPurchased;
+    const purchasedAt = newState ? Date.now() : undefined;
+
     await ctx.db.patch(args.itemId, {
       isPurchased: newState,
-      purchasedAt: newState ? Date.now() : undefined,
+      purchasedAt,
     });
 
     const remaining = await ctx.db
       .query("shoppingItems")
       .withIndex("by_list_purchased", (q) =>
-        q.eq("listId", item.listId).eq("isPurchased", false)
+        q.eq("listId", item.listId).eq("isPurchased", false),
       )
       .first();
 
+    const list = await ctx.db.get(item.listId);
+    if (!list) return;
+
     if (!remaining) {
-      await ctx.db.patch(item.listId, {
+      const completedAt = Date.now();
+      await ctx.db.patch(list._id, {
         status: "completed",
-        completedAt: Date.now(),
+        completedAt,
+      });
+
+      const txId = await ctx.db.insert("transactions", {
+        userId,
+        type: "expense",
+        name: list.name,
+        amountCents: list.totalCents,
+        date: completedAt,
+        status: "paid",
+        isCredit: false,
+        isRecurring: false,
+        includeInStats: true,
+        competenceMonth: list.month,
+        competenceYear: list.year,
+        createdAt: completedAt,
+      });
+
+      await ctx.db.patch(list._id, {
+        transactionId: txId,
       });
     } else {
-      const list = await ctx.db.get(item.listId);
-      if (list && list.status === "completed") {
-        await ctx.db.patch(item.listId, {
+      if (list.status === "completed") {
+        if (list.transactionId) {
+          await ctx.db.delete(list.transactionId);
+        }
+
+        await ctx.db.patch(list._id, {
           status: "active",
           completedAt: undefined,
+          transactionId: undefined,
         });
       }
     }
