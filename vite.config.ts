@@ -1,43 +1,83 @@
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
+import reactInspector from "vite-plugin-react-inspector";
 
-// https://vite.dev/config/
-export default defineConfig(({ mode }) => ({
+const isDev = process.env.NODE_ENV !== "production";
+
+function transformInspectorPaths(): Plugin {
+  const srcPath = path.resolve(import.meta.dirname, "src");
+
+  return {
+    name: "transform-inspector-paths",
+    enforce: "pre",
+    transform(code, id) {
+      if (!isDev || id.includes("node_modules") || !code) {
+        return null;
+      }
+
+      if (!code.includes("data-react-inspector")) {
+        return null;
+      }
+
+      const patterns = [
+        /data-react-inspector\s*=\s*["']([^"']+)["']/g,
+        /"data-react-inspector"\s*:\s*"([^"]+)"/g,
+        /'data-react-inspector'\s*:\s*'([^']+)'/g,
+      ];
+
+      let modified = false;
+      let transformedCode = code;
+
+      for (const regex of patterns) {
+        transformedCode = transformedCode.replace(regex, (match, fullPath) => {
+          const parts = fullPath.split(":");
+          const filePath = parts[0];
+          const location = parts.slice(1).join(":");
+
+          if (filePath && filePath.startsWith(srcPath)) {
+            const relativePath = path.relative(srcPath, filePath);
+            const newPath = `src/${relativePath}${location ? ":" + location : ""}`;
+            modified = true;
+            return match.replace(fullPath, newPath);
+          }
+
+          return match;
+        });
+      }
+
+      return modified ? { code: transformedCode, map: null } : null;
+    },
+  };
+}
+
+export default defineConfig({
   plugins: [
+    reactInspector(),
+
     react(),
-    // The code below enables dev tools like taking screenshots of your site
-    // while it is being developed on chef.convex.dev.
-    // Feel free to remove this code if you're no longer developing your app with Chef.
-    mode === "development"
-      ? {
-          name: "inject-chef-dev",
-          transform(code: string, id: string) {
-            if (id.includes("main.tsx")) {
-              return {
-                code: `${code}
-
-/* Added by Vite plugin inject-chef-dev */
-window.addEventListener('message', async (message) => {
-  if (message.source !== window.parent) return;
-  if (message.data.type !== 'chefPreviewRequest') return;
-
-  const worker = await import('https://chef.convex.dev/scripts/worker.bundled.mjs');
-  await worker.respondToMessage(message);
-});
-            `,
-                map: null,
-              };
-            }
-            return null;
-          },
-        }
-      : null,
-    // End of code for taking screenshots on chef.convex.dev.
+    isDev && transformInspectorPaths(),
   ].filter(Boolean),
+
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      "@": path.resolve(import.meta.dirname, "src"),
     },
   },
-}));
+
+  build: {
+    outDir: "dist",
+    emptyOutDir: true,
+    sourcemap: isDev,
+  },
+
+  server: {
+    port: 3000,
+    host: true,
+    strictPort: false,
+    fs: {
+      strict: true,
+      deny: ["**/.*"],
+    },
+  },
+});
