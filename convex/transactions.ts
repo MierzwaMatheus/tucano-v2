@@ -2,11 +2,11 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
-function generateId(): string {
+export function generateId(): string {
   return Math.random().toString(36).substring(2) + Date.now().toString(36);
 }
 
-function getCompetence(
+export function getCompetence(
   purchaseDate: number,
   isCredit: boolean,
   closingDay: number,
