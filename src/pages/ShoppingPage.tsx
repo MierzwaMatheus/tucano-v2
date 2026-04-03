@@ -2,14 +2,24 @@ import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
-import { Plus, ShoppingCart, CheckCircle2, Circle, Trash2, ChevronRight, ArrowLeft, Package } from "lucide-react";
+import {
+  Plus,
+  ShoppingCart,
+  CheckCircle2,
+  Circle,
+  Trash2,
+  ChevronRight,
+  ArrowLeft,
+  Package,
+} from "lucide-react";
 import { formatBRL, toCents, fromCents } from "../lib/currency";
 import { MONTHS } from "../lib/dates";
 import { Modal } from "../components/Modal";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 
 export function ShoppingPage() {
-  const [selectedListId, setSelectedListId] = useState<Id<"shoppingLists"> | null>(null);
+  const [selectedListId, setSelectedListId] =
+    useState<Id<"shoppingLists"> | null>(null);
 
   if (selectedListId) {
     return (
@@ -23,13 +33,19 @@ export function ShoppingPage() {
   return <ListsOverview onSelectList={setSelectedListId} />;
 }
 
-function ListsOverview({ onSelectList }: { onSelectList: (id: Id<"shoppingLists">) => void }) {
+function ListsOverview({
+  onSelectList,
+}: {
+  onSelectList: (id: Id<"shoppingLists">) => void;
+}) {
   const lists = useQuery(api.shoppingLists.list) ?? [];
   const createList = useMutation(api.shoppingLists.create);
   const removeList = useMutation(api.shoppingLists.remove);
 
   const [showCreate, setShowCreate] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<Id<"shoppingLists"> | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Id<"shoppingLists"> | null>(
+    null,
+  );
 
   const now = new Date();
   const [form, setForm] = useState({
@@ -48,15 +64,24 @@ function ListsOverview({ onSelectList }: { onSelectList: (id: Id<"shoppingLists"
       budgetCents: toCents(parseFloat(form.budget) || 0),
     });
     setShowCreate(false);
-    setForm({ name: "", month: now.getMonth() + 1, year: now.getFullYear(), budget: "" });
+    setForm({
+      name: "",
+      month: now.getMonth() + 1,
+      year: now.getFullYear(),
+      budget: "",
+    });
   }
 
   return (
     <div className="p-4 max-w-2xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-text-primary">Listas de Compras</h1>
-          <p className="text-sm text-text-muted mt-0.5">{lists.length} lista{lists.length !== 1 ? "s" : ""}</p>
+          <h1 className="text-2xl font-bold text-text-primary">
+            Listas de Compras
+          </h1>
+          <p className="text-sm text-text-muted mt-0.5">
+            {lists.length} lista{lists.length !== 1 ? "s" : ""}
+          </p>
         </div>
         <button
           onClick={() => setShowCreate(true)}
@@ -69,20 +94,38 @@ function ListsOverview({ onSelectList }: { onSelectList: (id: Id<"shoppingLists"
 
       {lists.length === 0 ? (
         <div className="text-center py-16">
-          <svg className="mx-auto mb-4" width="80" height="40" viewBox="0 0 80 40">
-            <line x1="0" y1="20" x2="80" y2="20" stroke="#6B7078" strokeWidth="1" />
+          <svg
+            className="mx-auto mb-4"
+            width="80"
+            height="40"
+            viewBox="0 0 80 40"
+          >
+            <line
+              x1="0"
+              y1="20"
+              x2="80"
+              y2="20"
+              stroke="#6B7078"
+              strokeWidth="1"
+            />
             <circle cx="20" cy="20" r="2" fill="#6B7078" />
             <circle cx="40" cy="20" r="2" fill="#6B7078" />
             <circle cx="60" cy="20" r="2" fill="#6B7078" />
           </svg>
           <p className="text-text-secondary font-medium">Nenhuma lista ainda</p>
-          <p className="text-text-muted text-sm mt-1">Crie sua primeira lista de compras</p>
+          <p className="text-text-muted text-sm mt-1">
+            Crie sua primeira lista de compras
+          </p>
         </div>
       ) : (
         <div className="space-y-3">
           {lists.map((list) => {
-            const pct = list.budgetCents > 0 ? Math.min(100, (list.totalCents / list.budgetCents) * 100) : 0;
-            const over = list.totalCents > list.budgetCents && list.budgetCents > 0;
+            const pct =
+              list.budgetCents > 0
+                ? Math.min(100, (list.totalCents / list.budgetCents) * 100)
+                : 0;
+            const over =
+              list.totalCents > list.budgetCents && list.budgetCents > 0;
             return (
               <div
                 key={list._id}
@@ -99,7 +142,9 @@ function ListsOverview({ onSelectList }: { onSelectList: (id: Id<"shoppingLists"
                       ) : (
                         <ShoppingCart size={18} className="text-accent" />
                       )}
-                      <span className="font-semibold text-text-primary">{list.name}</span>
+                      <span className="font-semibold text-text-primary">
+                        {list.name}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-text-muted">
@@ -109,11 +154,19 @@ function ListsOverview({ onSelectList }: { onSelectList: (id: Id<"shoppingLists"
                     </div>
                   </div>
                   <div className="flex items-center justify-between text-sm mb-2">
-                    <span className={over ? "text-status-error font-medium" : "text-text-secondary"}>
+                    <span
+                      className={
+                        over
+                          ? "text-status-error font-medium"
+                          : "text-text-secondary"
+                      }
+                    >
                       {formatBRL(list.totalCents)}
                     </span>
                     {list.budgetCents > 0 && (
-                      <span className="text-text-muted">de {formatBRL(list.budgetCents)}</span>
+                      <span className="text-text-muted">
+                        de {formatBRL(list.budgetCents)}
+                      </span>
                     )}
                   </div>
                   {list.budgetCents > 0 && (
@@ -141,10 +194,15 @@ function ListsOverview({ onSelectList }: { onSelectList: (id: Id<"shoppingLists"
       )}
 
       {showCreate && (
-        <Modal title="Nova Lista de Compras" onClose={() => setShowCreate(false)}>
+        <Modal
+          title="Nova Lista de Compras"
+          onClose={() => setShowCreate(false)}
+        >
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Nome</label>
+              <label className="block text-sm font-medium text-text-secondary mb-1">
+                Nome
+              </label>
               <input
                 className="w-full px-3 py-2.5 rounded-input bg-surface-elevated border border-border text-text-primary placeholder-text-muted focus:border-accent focus:ring-1 focus:ring-accent outline-none"
                 placeholder="Ex: Mercado de abril"
@@ -154,29 +212,41 @@ function ListsOverview({ onSelectList }: { onSelectList: (id: Id<"shoppingLists"
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">Mês</label>
+                <label className="block text-sm font-medium text-text-secondary mb-1">
+                  Mês
+                </label>
                 <select
                   className="w-full px-3 py-2.5 rounded-input bg-surface-elevated border border-border text-text-primary focus:border-accent outline-none"
                   value={form.month}
-                  onChange={(e) => setForm({ ...form, month: parseInt(e.target.value) })}
+                  onChange={(e) =>
+                    setForm({ ...form, month: parseInt(e.target.value) })
+                  }
                 >
                   {MONTHS.map((m, i) => (
-                    <option key={i} value={i + 1}>{m}</option>
+                    <option key={i} value={i + 1}>
+                      {m}
+                    </option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">Ano</label>
+                <label className="block text-sm font-medium text-text-secondary mb-1">
+                  Ano
+                </label>
                 <input
                   type="number"
                   className="w-full px-3 py-2.5 rounded-input bg-surface-elevated border border-border text-text-primary focus:border-accent outline-none"
                   value={form.year}
-                  onChange={(e) => setForm({ ...form, year: parseInt(e.target.value) })}
+                  onChange={(e) =>
+                    setForm({ ...form, year: parseInt(e.target.value) })
+                  }
                 />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Orçamento (R$)</label>
+              <label className="block text-sm font-medium text-text-secondary mb-1">
+                Orçamento (R$)
+              </label>
               <input
                 type="number"
                 step="0.01"
@@ -214,16 +284,25 @@ function ListsOverview({ onSelectList }: { onSelectList: (id: Id<"shoppingLists"
   );
 }
 
-function ListDetail({ listId, onBack }: { listId: Id<"shoppingLists">; onBack: () => void }) {
+function ListDetail({
+  listId,
+  onBack,
+}: {
+  listId: Id<"shoppingLists">;
+  onBack: () => void;
+}) {
   const data = useQuery(api.shoppingLists.getWithItems, { listId });
   const addItem = useMutation(api.shoppingItems.addItem);
   const togglePurchased = useMutation(api.shoppingItems.togglePurchased);
   const deleteItem = useMutation(api.shoppingItems.deleteItem);
   const catalogResults = useQuery(api.productCatalog.search, { term: "" });
+  const categories = useQuery(api.categories.list, { type: "shopping" }) ?? [];
 
   const [showAdd, setShowAdd] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const searchResults = useQuery(api.productCatalog.search, { term: searchTerm });
+  const searchResults = useQuery(api.productCatalog.search, {
+    term: searchTerm,
+  });
 
   const [form, setForm] = useState({
     name: "",
@@ -232,6 +311,7 @@ function ListDetail({ listId, onBack }: { listId: Id<"shoppingLists">; onBack: (
     price: "",
     brand: "",
     catalogItemId: undefined as Id<"productCatalog"> | undefined,
+    categoryId: undefined as Id<"categories"> | undefined,
   });
 
   if (!data) {
@@ -245,10 +325,20 @@ function ListDetail({ listId, onBack }: { listId: Id<"shoppingLists">; onBack: (
   const { items, ...list } = data;
   const purchased = items.filter((i) => i.isPurchased);
   const pending = items.filter((i) => !i.isPurchased);
-  const pct = list.budgetCents > 0 ? Math.min(100, (list.totalCents / list.budgetCents) * 100) : 0;
+  const pct =
+    list.budgetCents > 0
+      ? Math.min(100, (list.totalCents / list.budgetCents) * 100)
+      : 0;
   const over = list.totalCents > list.budgetCents && list.budgetCents > 0;
 
-  function selectCatalogItem(item: { _id: Id<"productCatalog">; name: string; defaultUnit: string; defaultBrand?: string; lastPriceCents: number }) {
+  function selectCatalogItem(item: {
+    _id: Id<"productCatalog">;
+    name: string;
+    defaultUnit: string;
+    defaultBrand?: string;
+    lastPriceCents: number;
+    categoryId?: Id<"categories">;
+  }) {
     setForm({
       name: item.name,
       unit: item.defaultUnit,
@@ -256,6 +346,7 @@ function ListDetail({ listId, onBack }: { listId: Id<"shoppingLists">; onBack: (
       price: fromCents(item.lastPriceCents).toFixed(2),
       brand: item.defaultBrand ?? "",
       catalogItemId: item._id,
+      categoryId: item.categoryId,
     });
     setSearchTerm("");
   }
@@ -270,21 +361,35 @@ function ListDetail({ listId, onBack }: { listId: Id<"shoppingLists">; onBack: (
       quantity: parseFloat(form.quantity) || 1,
       unitPriceCents: toCents(parseFloat(form.price) || 0),
       brand: form.brand || undefined,
+      categoryId: form.categoryId,
     });
     setShowAdd(false);
-    setForm({ name: "", unit: "un", quantity: "1", price: "", brand: "", catalogItemId: undefined });
+    setForm({
+      name: "",
+      unit: "un",
+      quantity: "1",
+      price: "",
+      brand: "",
+      catalogItemId: undefined,
+      categoryId: undefined,
+    });
     setSearchTerm("");
   }
 
   return (
     <div className="p-4 max-w-2xl mx-auto">
       <div className="flex items-center gap-3 mb-4">
-        <button onClick={onBack} className="p-2 rounded-button hover:bg-surface-elevated transition-colors text-text-muted hover:text-text-secondary">
+        <button
+          onClick={onBack}
+          className="p-2 rounded-button hover:bg-surface-elevated transition-colors text-text-muted hover:text-text-secondary"
+        >
           <ArrowLeft size={20} />
         </button>
         <div className="flex-1">
           <h1 className="text-xl font-bold text-text-primary">{list.name}</h1>
-          <p className="text-sm text-text-muted">{MONTHS[list.month - 1]} {list.year}</p>
+          <p className="text-sm text-text-muted">
+            {MONTHS[list.month - 1]} {list.year}
+          </p>
         </div>
         {list.status === "completed" && (
           <span className="text-xs bg-accent-subtle text-accent px-2.5 py-1 rounded-full font-medium">
@@ -297,7 +402,9 @@ function ListDetail({ listId, onBack }: { listId: Id<"shoppingLists">; onBack: (
       <div className="bg-surface-card rounded-card border border-border-subtle shadow-card p-4 mb-4">
         <div className="flex justify-between items-center mb-2">
           <span className="text-sm text-text-secondary">Total gasto</span>
-          <span className={`font-bold text-lg ${over ? "text-status-error" : "text-text-primary"}`}>
+          <span
+            className={`font-bold text-lg ${over ? "text-status-error" : "text-text-primary"}`}
+          >
             {formatBRL(list.totalCents)}
           </span>
         </div>
@@ -366,8 +473,20 @@ function ListDetail({ listId, onBack }: { listId: Id<"shoppingLists">; onBack: (
 
       {items.length === 0 && (
         <div className="text-center py-12">
-          <svg className="mx-auto mb-3" width="60" height="30" viewBox="0 0 60 30">
-            <line x1="0" y1="15" x2="60" y2="15" stroke="#6B7078" strokeWidth="1" />
+          <svg
+            className="mx-auto mb-3"
+            width="60"
+            height="30"
+            viewBox="0 0 60 30"
+          >
+            <line
+              x1="0"
+              y1="15"
+              x2="60"
+              y2="15"
+              stroke="#6B7078"
+              strokeWidth="1"
+            />
             <circle cx="15" cy="15" r="2" fill="#6B7078" />
             <circle cx="30" cy="15" r="2" fill="#6B7078" />
             <circle cx="45" cy="15" r="2" fill="#6B7078" />
@@ -377,70 +496,102 @@ function ListDetail({ listId, onBack }: { listId: Id<"shoppingLists">; onBack: (
       )}
 
       {showAdd && (
-        <Modal title="Adicionar Item" onClose={() => { setShowAdd(false); setSearchTerm(""); }}>
+        <Modal
+          title="Adicionar Item"
+          onClose={() => {
+            setShowAdd(false);
+            setSearchTerm("");
+          }}
+        >
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Buscar no catálogo</label>
+              <label className="block text-sm font-medium text-text-secondary mb-1">
+                Buscar no catálogo
+              </label>
               <input
                 className="w-full px-3 py-2.5 rounded-input bg-surface-elevated border border-border text-text-primary placeholder-text-muted focus:border-accent outline-none"
                 placeholder="Digite para buscar..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              {searchTerm.length >= 2 && searchResults && searchResults.length > 0 && (
-                <div className="mt-1 border border-border rounded-input overflow-hidden shadow-card">
-                  {searchResults.map((r) => (
-                    <button
-                      key={r._id}
-                      className="w-full text-left px-3 py-2.5 hover:bg-surface-elevated transition-colors border-b last:border-b-0 border-border-subtle"
-                      onClick={() => selectCatalogItem(r)}
-                    >
-                      <div className="font-medium text-text-primary text-sm">{r.name}</div>
-                      <div className="text-xs text-text-muted">{r.defaultUnit} · {formatBRL(r.lastPriceCents)}</div>
-                    </button>
-                  ))}
-                </div>
-              )}
+              {searchTerm.length >= 2 &&
+                searchResults &&
+                searchResults.length > 0 && (
+                  <div className="mt-1 border border-border rounded-input overflow-hidden shadow-card">
+                    {searchResults.map((r) => (
+                      <button
+                        key={r._id}
+                        className="w-full text-left px-3 py-2.5 hover:bg-surface-elevated transition-colors border-b last:border-b-0 border-border-subtle"
+                        onClick={() => selectCatalogItem(r)}
+                      >
+                        <div className="font-medium text-text-primary text-sm">
+                          {r.name}
+                        </div>
+                        <div className="text-xs text-text-muted">
+                          {r.defaultUnit} · {formatBRL(r.lastPriceCents)}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Nome do produto *</label>
+              <label className="block text-sm font-medium text-text-secondary mb-1">
+                Nome do produto *
+              </label>
               <input
                 className="w-full px-3 py-2.5 rounded-input bg-surface-elevated border border-border text-text-primary placeholder-text-muted focus:border-accent outline-none"
                 placeholder="Ex: Arroz"
                 value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value, catalogItemId: undefined })}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    name: e.target.value,
+                    catalogItemId: undefined,
+                  })
+                }
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">Quantidade</label>
+                <label className="block text-sm font-medium text-text-secondary mb-1">
+                  Quantidade
+                </label>
                 <input
                   type="number"
                   step="0.001"
                   min="0.001"
                   className="w-full px-3 py-2.5 rounded-input bg-surface-elevated border border-border text-text-primary focus:border-accent outline-none"
                   value={form.quantity}
-                  onChange={(e) => setForm({ ...form, quantity: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, quantity: e.target.value })
+                  }
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">Unidade</label>
+                <label className="block text-sm font-medium text-text-secondary mb-1">
+                  Unidade
+                </label>
                 <select
                   className="w-full px-3 py-2.5 rounded-input bg-surface-elevated border border-border text-text-primary focus:border-accent outline-none"
                   value={form.unit}
                   onChange={(e) => setForm({ ...form, unit: e.target.value })}
                 >
                   {["un", "kg", "g", "L", "mL", "cx", "pct", "dz"].map((u) => (
-                    <option key={u} value={u}>{u}</option>
+                    <option key={u} value={u}>
+                      {u}
+                    </option>
                   ))}
                 </select>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Preço unitário (R$) *</label>
+              <label className="block text-sm font-medium text-text-secondary mb-1">
+                Preço unitário (R$) *
+              </label>
               <input
                 type="number"
                 step="0.01"
@@ -453,13 +604,40 @@ function ListDetail({ listId, onBack }: { listId: Id<"shoppingLists">; onBack: (
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Marca (opcional)</label>
+              <label className="block text-sm font-medium text-text-secondary mb-1">
+                Marca (opcional)
+              </label>
               <input
                 className="w-full px-3 py-2.5 rounded-input bg-surface-elevated border border-border text-text-primary placeholder-text-muted focus:border-accent outline-none"
                 placeholder="Ex: Camil"
                 value={form.brand}
                 onChange={(e) => setForm({ ...form, brand: e.target.value })}
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-1">
+                Categoria (opcional)
+              </label>
+              <select
+                className="w-full px-3 py-2.5 rounded-input bg-surface-elevated border border-border text-text-primary focus:border-accent outline-none"
+                value={form.categoryId ?? ""}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    categoryId: e.target.value
+                      ? (e.target.value as Id<"categories">)
+                      : undefined,
+                  })
+                }
+              >
+                <option value="">Selecione uma categoria</option>
+                {categories.map((cat) => (
+                  <option key={cat._id} value={cat._id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <button
@@ -481,7 +659,16 @@ function ItemRow({
   onToggle,
   onDelete,
 }: {
-  item: { _id: Id<"shoppingItems">; name: string; quantity: number; unit: string; unitPriceCents: number; totalCents: number; brand?: string; isPurchased: boolean };
+  item: {
+    _id: Id<"shoppingItems">;
+    name: string;
+    quantity: number;
+    unit: string;
+    unitPriceCents: number;
+    totalCents: number;
+    brand?: string;
+    isPurchased: boolean;
+  };
   onToggle: () => void;
   onDelete: () => void;
 }) {
@@ -495,16 +682,22 @@ function ItemRow({
         )}
       </button>
       <div className="flex-1 min-w-0">
-        <div className={`font-medium text-text-primary truncate ${item.isPurchased ? "line-through text-text-muted" : ""}`}>
+        <div
+          className={`font-medium text-text-primary truncate ${item.isPurchased ? "line-through text-text-muted" : ""}`}
+        >
           {item.name}
-          {item.brand && <span className="text-text-muted font-normal"> · {item.brand}</span>}
+          {item.brand && (
+            <span className="text-text-muted font-normal"> · {item.brand}</span>
+          )}
         </div>
         <div className="text-xs text-text-muted">
           {item.quantity} {item.unit} × {formatBRL(item.unitPriceCents)}
         </div>
       </div>
       <div className="text-right flex-shrink-0">
-        <div className="font-semibold text-text-primary text-sm">{formatBRL(item.totalCents)}</div>
+        <div className="font-semibold text-text-primary text-sm">
+          {formatBRL(item.totalCents)}
+        </div>
       </div>
       <button
         onClick={onDelete}
