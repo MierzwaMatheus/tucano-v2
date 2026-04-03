@@ -14,7 +14,17 @@ import {
 } from "lucide-react";
 import { formatBRL, toCents, fromCents } from "../lib/currency";
 import { MONTHS } from "../lib/dates";
+import {
+  CATEGORY_SELECT,
+  FORM_LABELS,
+  ACTIONS,
+  EMPTY_STATES,
+  TYPE_LABELS,
+  SHOPPING_LABELS,
+  MODAL_TITLES,
+} from "../lib/ui-strings";
 import { Modal } from "../components/Modal";
+import { CategorySelect } from "../components/CategorySelect";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 
 export function ShoppingPage() {
@@ -88,7 +98,7 @@ function ListsOverview({
           className="flex items-center gap-2 bg-accent text-surface-page px-4 py-2.5 rounded-button font-medium hover:bg-accent-hover transition-colors shadow-card"
         >
           <Plus size={18} />
-          Nova Lista
+          {SHOPPING_LABELS.NEW_LIST}
         </button>
       </div>
 
@@ -112,9 +122,11 @@ function ListsOverview({
             <circle cx="40" cy="20" r="2" fill="#6B7078" />
             <circle cx="60" cy="20" r="2" fill="#6B7078" />
           </svg>
-          <p className="text-text-secondary font-medium">Nenhuma lista ainda</p>
+          <p className="text-text-secondary font-medium">
+            {EMPTY_STATES.NO_LIST}
+          </p>
           <p className="text-text-muted text-sm mt-1">
-            Crie sua primeira lista de compras
+            {EMPTY_STATES.NO_LIST_HINT}
           </p>
         </div>
       ) : (
@@ -195,7 +207,7 @@ function ListsOverview({
 
       {showCreate && (
         <Modal
-          title="Nova Lista de Compras"
+          title="{SHOPPING_LABELS.NEW_LIST_TITLE}"
           onClose={() => setShowCreate(false)}
         >
           <div className="space-y-4">
@@ -261,7 +273,7 @@ function ListsOverview({
               disabled={!form.name.trim()}
               className="w-full py-3 bg-accent text-surface-page rounded-button font-semibold hover:bg-accent-hover transition-colors disabled:opacity-50"
             >
-              Criar Lista
+              {SHOPPING_LABELS.CREATE_LIST}
             </button>
           </div>
         </Modal>
@@ -271,7 +283,7 @@ function ListsOverview({
         <ConfirmDialog
           title="Excluir lista?"
           message="Todos os itens desta lista serão removidos permanentemente."
-          confirmLabel="Excluir"
+          confirmLabel={ACTIONS.DELETE}
           danger
           onConfirm={async () => {
             await removeList({ id: deleteTarget });
@@ -430,14 +442,14 @@ function ListDetail({
         className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-accent/30 text-accent rounded-card font-medium hover:border-accent/60 hover:bg-accent-subtle transition-colors mb-4"
       >
         <Plus size={18} />
-        Adicionar Item
+        {SHOPPING_LABELS.ADD_ITEM_BUTTON}
       </button>
 
       {/* Pending items */}
       {pending.length > 0 && (
         <div className="mb-4">
           <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2 px-1">
-            A comprar ({pending.length})
+            {SHOPPING_LABELS.TO_BUY} ({pending.length})
           </h3>
           <div className="space-y-2">
             {pending.map((item) => (
@@ -456,7 +468,7 @@ function ListDetail({
       {purchased.length > 0 && (
         <div>
           <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2 px-1">
-            Comprados ({purchased.length})
+            {SHOPPING_LABELS.PURCHASED} ({purchased.length})
           </h3>
           <div className="space-y-2 opacity-60">
             {purchased.map((item) => (
@@ -497,7 +509,7 @@ function ListDetail({
 
       {showAdd && (
         <Modal
-          title="Adicionar Item"
+          title={MODAL_TITLES.ADD_ITEM}
           onClose={() => {
             setShowAdd(false);
             setSearchTerm("");
@@ -506,7 +518,7 @@ function ListDetail({
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-1">
-                Buscar no catálogo
+                {SHOPPING_LABELS.SEARCH_CATALOG}
               </label>
               <input
                 className="w-full px-3 py-2.5 rounded-input bg-surface-elevated border border-border text-text-primary placeholder-text-muted focus:border-accent outline-none"
@@ -538,7 +550,7 @@ function ListDetail({
 
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-1">
-                Nome do produto *
+                {FORM_LABELS.NAME_REQUIRED}
               </label>
               <input
                 className="w-full px-3 py-2.5 rounded-input bg-surface-elevated border border-border text-text-primary placeholder-text-muted focus:border-accent outline-none"
@@ -557,7 +569,7 @@ function ListDetail({
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-1">
-                  Quantidade
+                  {FORM_LABELS.QUANTITY}
                 </label>
                 <input
                   type="number"
@@ -572,7 +584,7 @@ function ListDetail({
               </div>
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-1">
-                  Unidade
+                  {FORM_LABELS.UNIT}
                 </label>
                 <select
                   className="w-full px-3 py-2.5 rounded-input bg-surface-elevated border border-border text-text-primary focus:border-accent outline-none"
@@ -590,7 +602,7 @@ function ListDetail({
 
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-1">
-                Preço unitário (R$) *
+                {FORM_LABELS.UNIT_PRICE_REQUIRED}
               </label>
               <input
                 type="number"
@@ -605,7 +617,7 @@ function ListDetail({
 
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-1">
-                Marca (opcional)
+                {FORM_LABELS.BRAND}
               </label>
               <input
                 className="w-full px-3 py-2.5 rounded-input bg-surface-elevated border border-border text-text-primary placeholder-text-muted focus:border-accent outline-none"
@@ -615,37 +627,20 @@ function ListDetail({
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">
-                Categoria (opcional)
-              </label>
-              <select
-                className="w-full px-3 py-2.5 rounded-input bg-surface-elevated border border-border text-text-primary focus:border-accent outline-none"
-                value={form.categoryId ?? ""}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    categoryId: e.target.value
-                      ? (e.target.value as Id<"categories">)
-                      : undefined,
-                  })
-                }
-              >
-                <option value="">Selecione uma categoria</option>
-                {categories.map((cat) => (
-                  <option key={cat._id} value={cat._id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <CategorySelect
+              categories={categories}
+              value={form.categoryId}
+              onChange={(id) => setForm({ ...form, categoryId: id })}
+              placeholder={CATEGORY_SELECT.PLACEHOLDER}
+              label={FORM_LABELS.CATEGORY_OPTIONAL}
+            />
 
             <button
               onClick={handleAdd}
               disabled={!form.name.trim() || !form.price}
               className="w-full py-3 bg-accent text-surface-page rounded-button font-semibold hover:bg-accent-hover transition-colors disabled:opacity-50"
             >
-              Adicionar
+              {ACTIONS.ADD}
             </button>
           </div>
         </Modal>
@@ -668,6 +663,7 @@ function ItemRow({
     totalCents: number;
     brand?: string;
     isPurchased: boolean;
+    category?: { name: string; color?: string; icon?: string } | null;
   };
   onToggle: () => void;
   onDelete: () => void;
@@ -690,8 +686,29 @@ function ItemRow({
             <span className="text-text-muted font-normal"> · {item.brand}</span>
           )}
         </div>
-        <div className="text-xs text-text-muted">
-          {item.quantity} {item.unit} × {formatBRL(item.unitPriceCents)}
+        <div className="text-xs text-text-muted flex items-center gap-1.5">
+          {item.category && (
+            <>
+              {item.category.icon && <span>{item.category.icon}</span>}
+              {item.category.color && (
+                <span
+                  className="w-2 h-2 rounded-full"
+                  style={{ backgroundColor: item.category.color }}
+                />
+              )}
+              <span>{item.category.name}</span>
+            </>
+          )}
+          {!item.category && (
+            <span>
+              {item.quantity} {item.unit} × {formatBRL(item.unitPriceCents)}
+            </span>
+          )}
+          {item.category && (
+            <span>
+              · {item.quantity} {item.unit} × {formatBRL(item.unitPriceCents)}
+            </span>
+          )}
         </div>
       </div>
       <div className="text-right flex-shrink-0">
