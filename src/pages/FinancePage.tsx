@@ -89,10 +89,10 @@ export function FinancePage() {
   return (
     <div className="p-4 max-w-2xl mx-auto">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold text-gray-900">Balanços</h1>
+        <h1 className="text-2xl font-bold text-text-primary">Visão</h1>
         <button
           onClick={() => setShowAdd(true)}
-          className="flex items-center gap-2 bg-primary text-white px-4 py-2.5 rounded-xl font-medium hover:bg-primary-hover transition-colors shadow-sm"
+          className="flex items-center gap-2 bg-accent text-surface-page px-4 py-2.5 rounded-button font-medium hover:bg-accent-hover transition-colors shadow-card"
         >
           <Plus size={18} />
           Novo
@@ -110,29 +110,29 @@ export function FinancePage() {
             label="Receitas"
             value={summary.totalIncome}
             icon={<TrendingUp size={18} />}
-            color="text-green-600"
-            bg="bg-green-50"
+            color="text-status-success"
+            bg="bg-accent-subtle"
           />
           <SummaryCard
             label="Despesas"
             value={summary.totalExpense}
             icon={<TrendingDown size={18} />}
-            color="text-red-500"
-            bg="bg-red-50"
+            color="text-status-error"
+            bg="bg-status-error/10"
           />
           <SummaryCard
             label="Saldo"
             value={summary.balance}
             icon={<Wallet size={18} />}
-            color={summary.balance >= 0 ? "text-blue-600" : "text-red-500"}
-            bg="bg-blue-50"
+            color={summary.balance >= 0 ? "text-accent" : "text-status-error"}
+            bg="bg-accent-subtle"
           />
           <SummaryCard
             label="A pagar"
             value={summary.pending}
             icon={<Clock size={18} />}
-            color="text-orange-500"
-            bg="bg-orange-50"
+            color="text-status-warning"
+            bg="bg-status-warning/10"
           />
         </div>
       )}
@@ -140,7 +140,7 @@ export function FinancePage() {
       {/* Incomes */}
       {incomes.length > 0 && (
         <div className="mb-4">
-          <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 px-1">
+          <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2 px-1">
             Receitas ({incomes.length})
           </h3>
           <div className="space-y-2">
@@ -159,7 +159,7 @@ export function FinancePage() {
       {/* Expenses */}
       {expenses.length > 0 && (
         <div className="mb-4">
-          <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 px-1">
+          <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2 px-1">
             Despesas ({expenses.length})
           </h3>
           <div className="space-y-2">
@@ -177,9 +177,14 @@ export function FinancePage() {
 
       {transactions.length === 0 && (
         <div className="text-center py-16">
-          <Wallet size={48} className="mx-auto text-gray-300 mb-4" />
-          <p className="text-gray-500 font-medium">Nenhuma transação</p>
-          <p className="text-gray-400 text-sm mt-1">Adicione receitas e despesas do mês</p>
+          <svg className="mx-auto mb-4" width="80" height="40" viewBox="0 0 80 40">
+            <line x1="0" y1="20" x2="80" y2="20" stroke="#6B7078" strokeWidth="1" />
+            <circle cx="20" cy="20" r="2" fill="#6B7078" />
+            <circle cx="40" cy="20" r="2" fill="#6B7078" />
+            <circle cx="60" cy="20" r="2" fill="#6B7078" />
+          </svg>
+          <p className="text-text-secondary font-medium">Nenhuma transação</p>
+          <p className="text-text-muted text-sm mt-1">Adicione receitas e despesas do mês</p>
         </div>
       )}
 
@@ -187,16 +192,16 @@ export function FinancePage() {
         <Modal title="Nova Transação" onClose={() => setShowAdd(false)}>
           <div className="space-y-4">
             {/* Type toggle */}
-            <div className="flex rounded-xl overflow-hidden border border-gray-200">
+            <div className="flex rounded-button overflow-hidden border border-border">
               {(["expense", "income"] as const).map((t) => (
                 <button
                   key={t}
                   className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
                     form.type === t
                       ? t === "expense"
-                        ? "bg-red-500 text-white"
-                        : "bg-green-500 text-white"
-                      : "text-gray-500 hover:bg-gray-50"
+                        ? "bg-status-error text-white"
+                        : "bg-status-success text-surface-page"
+                      : "text-text-muted hover:bg-surface-elevated"
                   }`}
                   onClick={() => setForm({ ...form, type: t })}
                 >
@@ -206,9 +211,9 @@ export function FinancePage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Nome *</label>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Nome *</label>
               <input
-                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:border-primary outline-none"
+                className="w-full px-3 py-2.5 rounded-input bg-surface-elevated border border-border text-text-primary placeholder-text-muted focus:border-accent outline-none"
                 placeholder="Ex: Supermercado"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -217,22 +222,22 @@ export function FinancePage() {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Valor (R$) *</label>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Valor (R$) *</label>
                 <input
                   type="number"
                   step="0.01"
                   min="0"
-                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:border-primary outline-none"
+                  className="w-full px-3 py-2.5 rounded-input bg-surface-elevated border border-border text-text-primary placeholder-text-muted focus:border-accent outline-none"
                   placeholder="0,00"
                   value={form.amount}
                   onChange={(e) => setForm({ ...form, amount: e.target.value })}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Data</label>
+                <label className="block text-sm font-medium text-text-secondary mb-1">Data</label>
                 <input
                   type="date"
-                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:border-primary outline-none"
+                  className="w-full px-3 py-2.5 rounded-input bg-surface-elevated border border-border text-text-primary focus:border-accent outline-none"
                   value={form.date}
                   onChange={(e) => setForm({ ...form, date: e.target.value })}
                 />
@@ -240,9 +245,9 @@ export function FinancePage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
+              <label className="block text-sm font-medium text-text-secondary mb-1">Categoria</label>
               <select
-                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:border-primary outline-none"
+                className="w-full px-3 py-2.5 rounded-input bg-surface-elevated border border-border text-text-primary focus:border-accent outline-none"
                 value={form.categoryId}
                 onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
               >
@@ -254,13 +259,13 @@ export function FinancePage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-              <div className="flex rounded-xl overflow-hidden border border-gray-200">
+              <label className="block text-sm font-medium text-text-secondary mb-1">Status</label>
+              <div className="flex rounded-button overflow-hidden border border-border">
                 {(["pending", "paid"] as const).map((s) => (
                   <button
                     key={s}
                     className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
-                      form.status === s ? "bg-primary text-white" : "text-gray-500 hover:bg-gray-50"
+                      form.status === s ? "bg-accent text-surface-page" : "text-text-muted hover:bg-surface-elevated"
                     }`}
                     onClick={() => setForm({ ...form, status: s })}
                   >
@@ -278,18 +283,18 @@ export function FinancePage() {
                     id="isCredit"
                     checked={form.isCredit}
                     onChange={(e) => setForm({ ...form, isCredit: e.target.checked })}
-                    className="w-4 h-4 accent-primary"
+                    className="w-4 h-4 accent-accent"
                   />
-                  <label htmlFor="isCredit" className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
+                  <label htmlFor="isCredit" className="text-sm font-medium text-text-secondary flex items-center gap-1.5">
                     <CreditCard size={15} /> Cartão de crédito
                   </label>
                 </div>
 
                 {form.isCredit && creditCards.length > 0 && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Cartão</label>
+                    <label className="block text-sm font-medium text-text-secondary mb-1">Cartão</label>
                     <select
-                      className="w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:border-primary outline-none"
+                      className="w-full px-3 py-2.5 rounded-input bg-surface-elevated border border-border text-text-primary focus:border-accent outline-none"
                       value={form.creditCardId}
                       onChange={(e) => setForm({ ...form, creditCardId: e.target.value })}
                     >
@@ -303,14 +308,14 @@ export function FinancePage() {
 
                 {!form.isRecurring && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1.5">
+                    <label className="block text-sm font-medium text-text-secondary mb-1 flex items-center gap-1.5">
                       <Layers size={15} /> Parcelas
                     </label>
                     <input
                       type="number"
                       min="1"
                       max="48"
-                      className="w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:border-primary outline-none"
+                      className="w-full px-3 py-2.5 rounded-input bg-surface-elevated border border-border text-text-primary focus:border-accent outline-none"
                       value={form.installments}
                       onChange={(e) => setForm({ ...form, installments: e.target.value })}
                     />
@@ -325,9 +330,9 @@ export function FinancePage() {
                 id="isRecurring"
                 checked={form.isRecurring}
                 onChange={(e) => setForm({ ...form, isRecurring: e.target.checked, installments: "1" })}
-                className="w-4 h-4 accent-primary"
+                className="w-4 h-4 accent-accent"
               />
-              <label htmlFor="isRecurring" className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
+              <label htmlFor="isRecurring" className="text-sm font-medium text-text-secondary flex items-center gap-1.5">
                 <RefreshCw size={15} /> Recorrente mensal (12 meses)
               </label>
             </div>
@@ -338,9 +343,9 @@ export function FinancePage() {
                 id="includeInStats"
                 checked={form.includeInStats}
                 onChange={(e) => setForm({ ...form, includeInStats: e.target.checked })}
-                className="w-4 h-4 accent-primary"
+                className="w-4 h-4 accent-accent"
               />
-              <label htmlFor="includeInStats" className="text-sm font-medium text-gray-700">
+              <label htmlFor="includeInStats" className="text-sm font-medium text-text-secondary">
                 Incluir no resumo
               </label>
             </div>
@@ -348,7 +353,7 @@ export function FinancePage() {
             <button
               onClick={handleAdd}
               disabled={!form.name.trim() || !form.amount}
-              className="w-full py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary-hover transition-colors disabled:opacity-50"
+              className="w-full py-3 bg-accent text-surface-page rounded-button font-semibold hover:bg-accent-hover transition-colors disabled:opacity-50"
             >
               Adicionar
             </button>
@@ -378,8 +383,8 @@ export function FinancePage() {
                 <button
                   key={m}
                   onClick={() => setDeleteMode(m)}
-                  className={`flex-1 py-2 text-sm rounded-lg border transition-colors ${
-                    deleteMode === m ? "border-red-400 bg-red-50 text-red-600" : "border-gray-200 text-gray-500"
+                  className={`flex-1 py-2 text-sm rounded-button border transition-colors ${
+                    deleteMode === m ? "border-status-error bg-status-error/10 text-status-error" : "border-border text-text-muted"
                   }`}
                 >
                   {m === "single" ? "Só esta" : "Esta e futuras"}
@@ -399,9 +404,9 @@ function SummaryCard({
   label: string; value: number; icon: React.ReactNode; color: string; bg: string;
 }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-      <div className={`inline-flex p-2 rounded-xl ${bg} ${color} mb-2`}>{icon}</div>
-      <div className="text-xs text-gray-400 mb-0.5">{label}</div>
+    <div className="bg-surface-card rounded-card border border-border-subtle shadow-card p-4">
+      <div className={`inline-flex p-2 rounded-button ${bg} ${color} mb-2`}>{icon}</div>
+      <div className="text-xs text-text-muted mb-0.5">{label}</div>
       <div className={`font-bold text-lg ${color}`}>{formatBRL(value)}</div>
     </div>
   );
@@ -432,44 +437,44 @@ function TransactionRow({
 }) {
   const isIncome = tx.type === "income";
   return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-sm flex items-center gap-3 px-4 py-3">
+    <div className="bg-surface-card rounded-card border border-border-subtle shadow-card flex items-center gap-3 px-4 py-3">
       <button onClick={onToggle} className="flex-shrink-0">
         {tx.status === "paid" ? (
-          <CheckCircle2 size={20} className={isIncome ? "text-green-500" : "text-blue-500"} />
+          <CheckCircle2 size={20} className={isIncome ? "text-accent" : "text-accent"} />
         ) : (
-          <Circle size={20} className="text-gray-300" />
+          <Circle size={20} className="text-text-muted" />
         )}
       </button>
       <div className="flex-1 min-w-0">
-        <div className="font-medium text-gray-900 truncate text-sm">
+        <div className="font-medium text-text-primary truncate text-sm">
           {tx.name}
           {tx.installmentNumber && tx.totalInstallments && (
-            <span className="text-gray-400 font-normal"> ({tx.installmentNumber}/{tx.totalInstallments})</span>
+            <span className="text-text-muted font-normal"> ({tx.installmentNumber}/{tx.totalInstallments})</span>
           )}
-          {tx.isRecurring && <RefreshCw size={11} className="inline ml-1 text-gray-400" />}
+          {tx.isRecurring && <RefreshCw size={11} className="inline ml-1 text-text-muted" />}
         </div>
         <div className="flex items-center gap-1.5 flex-wrap">
           {tx.category && (
-            <span className="text-xs text-gray-400">{tx.category.name}</span>
+            <span className="text-xs text-text-muted">{tx.category.name}</span>
           )}
           {tx.creditCard && (
-            <span className="text-xs text-gray-400 flex items-center gap-0.5">
+            <span className="text-xs text-text-muted flex items-center gap-0.5">
               <CreditCard size={10} /> {tx.creditCard.name}
             </span>
           )}
           <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-            tx.status === "paid" ? "bg-green-100 text-green-600" : "bg-orange-100 text-orange-600"
+            tx.status === "paid" ? "bg-accent-subtle text-accent" : "bg-status-warning/10 text-status-warning"
           }`}>
             {tx.status === "paid" ? "Pago" : "Pendente"}
           </span>
         </div>
       </div>
-      <div className={`font-bold text-sm flex-shrink-0 ${isIncome ? "text-green-600" : "text-gray-900"}`}>
+      <div className={`font-bold text-sm flex-shrink-0 ${isIncome ? "text-accent" : "text-text-primary"}`}>
         {isIncome ? "+" : "-"}{formatBRL(tx.amountCents)}
       </div>
       <button
         onClick={onDelete}
-        className="flex-shrink-0 p-1.5 text-gray-300 hover:text-red-400 transition-colors"
+        className="flex-shrink-0 p-1.5 text-text-muted hover:text-status-error transition-colors"
       >
         <Trash2 size={15} />
       </button>

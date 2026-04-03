@@ -2,44 +2,52 @@ const { fontFamily } = require("tailwindcss/defaultTheme");
 
 module.exports = {
   mode: "jit",
-  purge: ["./index.html", "./src/**/*.{vue,js,ts,jsx,tsx}"],
+  content: ["./index.html", "./src/**/*.{vue,js,ts,jsx,tsx}"],
   theme: {
     extend: {
       fontFamily: {
         sans: ["Inter var", ...fontFamily.sans],
       },
       borderRadius: {
-        DEFAULT: "8px",
-        secondary: "4px",
-        container: "12px",
+        card: "16px",
+        button: "12px",
+        input: "10px",
       },
       boxShadow: {
-        DEFAULT: "0 1px 4px rgba(0, 0, 0, 0.1)",
-        hover: "0 2px 8px rgba(0, 0, 0, 0.12)",
+        card: "0 4px 20px rgba(0,0,0,0.25)",
+        hover: "0 6px 30px rgba(0,0,0,0.35)",
+        float: "0 10px 40px rgba(0,0,0,0.45)",
       },
       colors: {
-        primary: {
-          DEFAULT: "#4F46E5",
-          hover: "#4338CA",
+        surface: {
+          page: "#0B0C0E",
+          card: "#121417",
+          elevated: "#171A1F",
         },
-        secondary: {
-          DEFAULT: "#6B7280",
-          hover: "#4B5563",
+        text: {
+          primary: "#E6E8EB",
+          secondary: "#A1A6AD",
+          muted: "#6B7078",
         },
         accent: {
-          DEFAULT: "#8B5CF6",
-          hover: "#7C3AED",
+          DEFAULT: "#2BD97F",
+          hover: "#25C46F",
+          subtle: "rgba(43,217,127,0.12)",
+        },
+        status: {
+          success: "#2BD97F",
+          error: "#FF5C5C",
+          warning: "#FFB020",
+        },
+        border: {
+          DEFAULT: "rgba(255,255,255,0.08)",
+          subtle: "rgba(255,255,255,0.04)",
         },
       },
       spacing: {
         "form-field": "16px",
         section: "32px",
       },
-    },
-  },
-  variants: {
-    extend: {
-      boxShadow: ["hover", "active"],
     },
   },
 };

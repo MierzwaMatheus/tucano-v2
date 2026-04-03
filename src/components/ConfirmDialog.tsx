@@ -23,24 +23,24 @@ export function ConfirmDialog({
 }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onCancel} />
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
-        <p className="text-gray-600 mb-4">{message}</p>
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onCancel} />
+      <div className="relative bg-surface-card rounded-card shadow-float w-full max-w-sm p-6 border border-border-subtle">
+        <h3 className="text-lg font-semibold text-text-primary mb-2">{title}</h3>
+        <p className="text-text-secondary mb-4">{message}</p>
         {children}
         <div className="flex gap-3">
           <button
             onClick={onCancel}
-            className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+            className="flex-1 px-4 py-2.5 rounded-button border border-border text-text-secondary font-medium hover:bg-surface-elevated transition-colors"
           >
             {cancelLabel}
           </button>
           <button
             onClick={onConfirm}
-            className={`flex-1 px-4 py-2.5 rounded-xl font-medium transition-colors ${
+            className={`flex-1 px-4 py-2.5 rounded-button font-medium transition-colors ${
               danger
-                ? "bg-red-500 text-white hover:bg-red-600"
-                : "bg-primary text-white hover:bg-primary-hover"
+                ? "bg-status-error text-white hover:bg-status-error/80"
+                : "bg-accent text-surface-page hover:bg-accent-hover"
             }`}
           >
             {confirmLabel}

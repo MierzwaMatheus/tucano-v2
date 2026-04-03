@@ -15,16 +15,16 @@ export function MonthNavigator({ month, year, onChange }: Props) {
     <div className="flex items-center gap-3">
       <button
         onClick={() => onChange(prev.month, prev.year)}
-        className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+        className="p-1.5 rounded-button hover:bg-surface-elevated transition-colors text-text-muted hover:text-text-secondary"
       >
         <ChevronLeft size={18} />
       </button>
-      <span className="font-semibold text-gray-800 min-w-[140px] text-center">
+      <span className="font-semibold text-text-primary min-w-[140px] text-center">
         {formatMonthYear(month, year)}
       </span>
       <button
         onClick={() => onChange(next.month, next.year)}
-        className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+        className="p-1.5 rounded-button hover:bg-surface-elevated transition-colors text-text-muted hover:text-text-secondary"
       >
         <ChevronRight size={18} />
       </button>
