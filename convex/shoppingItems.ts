@@ -1,0 +1,177 @@
+import { v } from "convex/values";
+import { mutation } from "./_generated/server";
+import { getAuthUserId } from "@convex-dev/auth/server";
+
+export const addItem = mutation({
+  args: {
+    listId: v.id("shoppingLists"),
+    catalogItemId: v.optional(v.id("productCatalog")),
+    name: v.string(),
+    unit: v.string(),
+    quantity: v.number(),
+    unitPriceCents: v.number(),
+    brand: v.optional(v.string()),
+    categoryId: v.optional(v.id("categories")),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Não autenticado");
+
+    const totalCents = Math.round(args.unitPriceCents * args.quantity);
+
+    await ctx.db.insert("shoppingItems", {
+      listId: args.listId,
+      userId,
+      catalogItemId: args.catalogItemId,
+      name: args.name,
+      unit: args.unit,
+      quantity: args.quantity,
+      unitPriceCents: args.unitPriceCents,
+      totalCents,
+      brand: args.brand,
+      categoryId: args.categoryId,
+      isPurchased: false,
+      createdAt: Date.now(),
+    });
+
+    const list = await ctx.db.get(args.listId);
+    if (list) {
+      await ctx.db.patch(args.listId, {
+        totalCents: list.totalCents + totalCents,
+      });
+    }
+
+    if (args.catalogItemId) {
+      const catalogItem = await ctx.db.get(args.catalogItemId);
+      if (catalogItem && catalogItem.lastPriceCents !== args.unitPriceCents) {
+        await ctx.db.patch(args.catalogItemId, {
+          lastPriceCents: args.unitPriceCents,
+          priceHistory: [
+            ...catalogItem.priceHistory,
+            {
+              priceCents: args.unitPriceCents,
+              date: Date.now(),
+              listId: args.listId,
+            },
+          ],
+          updatedAt: Date.now(),
+        });
+      }
+    } else {
+      await ctx.db.insert("productCatalog", {
+        userId,
+        name: args.name,
+        nameLower: args.name.toLowerCase(),
+        defaultUnit: args.unit,
+        defaultBrand: args.brand,
+        categoryId: args.categoryId,
+        lastPriceCents: args.unitPriceCents,
+        priceHistory: [
+          {
+            priceCents: args.unitPriceCents,
+            date: Date.now(),
+            listId: args.listId,
+          },
+        ],
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+    }
+  },
+});
+
+export const togglePurchased = mutation({
+  args: { itemId: v.id("shoppingItems") },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Não autenticado");
+
+    const item = await ctx.db.get(args.itemId);
+    if (!item) throw new Error("Item não encontrado");
+
+    const newState = !item.isPurchased;
+    await ctx.db.patch(args.itemId, {
+      isPurchased: newState,
+      purchasedAt: newState ? Date.now() : undefined,
+    });
+
+    const remaining = await ctx.db
+      .query("shoppingItems")
+      .withIndex("by_list_purchased", (q) =>
+        q.eq("listId", item.listId).eq("isPurchased", false)
+      )
+      .first();
+
+    if (!remaining) {
+      await ctx.db.patch(item.listId, {
+        status: "completed",
+        completedAt: Date.now(),
+      });
+    } else {
+      const list = await ctx.db.get(item.listId);
+      if (list && list.status === "completed") {
+        await ctx.db.patch(item.listId, {
+          status: "active",
+          completedAt: undefined,
+        });
+      }
+    }
+  },
+});
+
+export const updateItem = mutation({
+  args: {
+    id: v.id("shoppingItems"),
+    quantity: v.optional(v.number()),
+    unitPriceCents: v.optional(v.number()),
+    brand: v.optional(v.string()),
+    categoryId: v.optional(v.id("categories")),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Não autenticado");
+
+    const item = await ctx.db.get(args.id);
+    if (!item) throw new Error("Item não encontrado");
+
+    const newQty = args.quantity ?? item.quantity;
+    const newPrice = args.unitPriceCents ?? item.unitPriceCents;
+    const newTotal = Math.round(newQty * newPrice);
+    const delta = newTotal - item.totalCents;
+
+    await ctx.db.patch(args.id, {
+      quantity: newQty,
+      unitPriceCents: newPrice,
+      totalCents: newTotal,
+      brand: args.brand ?? item.brand,
+      categoryId: args.categoryId ?? item.categoryId,
+    });
+
+    const list = await ctx.db.get(item.listId);
+    if (list) {
+      await ctx.db.patch(item.listId, {
+        totalCents: list.totalCents + delta,
+      });
+    }
+  },
+});
+
+export const deleteItem = mutation({
+  args: { id: v.id("shoppingItems") },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Não autenticado");
+
+    const item = await ctx.db.get(args.id);
+    if (!item) throw new Error("Item não encontrado");
+
+    await ctx.db.delete(args.id);
+
+    const list = await ctx.db.get(item.listId);
+    if (list) {
+      await ctx.db.patch(item.listId, {
+        totalCents: Math.max(0, list.totalCents - item.totalCents),
+      });
+    }
+  },
+});
