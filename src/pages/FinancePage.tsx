@@ -14,6 +14,7 @@ import {
   CreditCard,
   RefreshCw,
   Layers,
+  BadgeCheck,
 } from "lucide-react";
 import { formatBRL, toCents, fromCents } from "../lib/currency";
 import {
@@ -68,6 +69,7 @@ export function FinancePage() {
     isCredit: false,
     creditCardId: "" as string,
     isRecurring: false,
+    isSubscription: false,
     installments: "1",
     includeInStats: true,
     description: "",
@@ -95,6 +97,7 @@ export function FinancePage() {
           ? (form.creditCardId as Id<"creditCards">)
           : undefined,
       isRecurring: form.isRecurring,
+      isSubscription: form.isSubscription,
       installments: parseInt(form.installments) || 1,
       includeInStats: form.includeInStats,
       description: form.description || undefined,
@@ -110,6 +113,7 @@ export function FinancePage() {
       isCredit: false,
       creditCardId: "",
       isRecurring: false,
+      isSubscription: false,
       installments: "1",
       includeInStats: true,
       description: "",
@@ -330,6 +334,21 @@ export function FinancePage() {
 
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-1">
+                Descrição
+              </label>
+              <textarea
+                className="w-full px-3 py-2.5 rounded-input bg-surface-elevated border border-border text-text-primary placeholder-text-muted focus:border-accent outline-none resize-none"
+                placeholder="Adicione uma descrição..."
+                rows={3}
+                value={form.description}
+                onChange={(e) =>
+                  setForm({ ...form, description: e.target.value })
+                }
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-1">
                 {FORM_LABELS.STATUS}
               </label>
               <div className="flex rounded-button overflow-hidden border border-border">
@@ -393,7 +412,32 @@ export function FinancePage() {
                   </div>
                 )}
 
-                {!form.isRecurring && (
+                {form.isCredit && (
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      id="isSubscription"
+                      checked={form.isSubscription}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          isSubscription: e.target.checked,
+                          isRecurring: e.target.checked,
+                          installments: "1",
+                        })
+                      }
+                      className="w-4 h-4 accent-accent"
+                    />
+                    <label
+                      htmlFor="isSubscription"
+                      className="text-sm font-medium text-text-secondary flex items-center gap-1.5"
+                    >
+                      <BadgeCheck size={15} /> É assinatura?
+                    </label>
+                  </div>
+                )}
+
+                {form.isCredit && !form.isRecurring && !form.isSubscription && (
                   <div>
                     <label className="block text-sm font-medium text-text-secondary mb-1 flex items-center gap-1.5">
                       <Layers size={15} /> {FORM_LABELS.INSTALLMENTS}
@@ -546,6 +590,7 @@ function TransactionRow({
     status: "pending" | "paid";
     isCredit: boolean;
     isRecurring: boolean;
+    isSubscription?: boolean;
     installmentNumber?: number;
     totalInstallments?: number;
     recurringGroupId?: string;
@@ -609,6 +654,11 @@ function TransactionRow({
           >
             {tx.status === "paid" ? "Pago" : "Pendente"}
           </span>
+          {tx.isSubscription && (
+            <span className="text-xs px-1.5 py-0.5 rounded-full bg-surface-elevated text-text-muted flex items-center gap-0.5">
+              <BadgeCheck size={10} /> Assinatura
+            </span>
+          )}
         </div>
       </div>
       <div

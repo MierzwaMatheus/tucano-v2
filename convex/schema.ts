@@ -74,6 +74,7 @@ const applicationTables = {
     installmentNumber: v.optional(v.number()),
     totalInstallments: v.optional(v.number()),
     isRecurring: v.boolean(),
+    isSubscription: v.optional(v.boolean()),
     recurringGroupId: v.optional(v.string()),
     includeInStats: v.boolean(),
     competenceMonth: v.number(),
