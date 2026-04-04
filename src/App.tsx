@@ -12,9 +12,16 @@ import {
   Tag,
   Settings,
   User,
+  BarChart3,
 } from "lucide-react";
 
-type Tab = "finance" | "shopping" | "cards" | "categories" | "settings";
+type Tab =
+  | "finance"
+  | "shopping"
+  | "cards"
+  | "dashboard"
+  | "categories"
+  | "settings";
 
 const TABS: { id: Tab; label: string; icon: React.ReactNode; path: string }[] =
   [
@@ -35,6 +42,12 @@ const TABS: { id: Tab; label: string; icon: React.ReactNode; path: string }[] =
       label: "Cartões",
       icon: <CreditCard size={20} />,
       path: "/cards",
+    },
+    {
+      id: "dashboard",
+      label: "Dados",
+      icon: <BarChart3 size={20} />,
+      path: "/dashboard",
     },
     {
       id: "categories",

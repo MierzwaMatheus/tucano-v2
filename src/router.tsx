@@ -5,6 +5,7 @@ import { ShoppingPage } from "./pages/ShoppingPage";
 import { CardsPage } from "./pages/CardsPage";
 import { CategoriesPage } from "./pages/CategoriesPage";
 import { SettingsPage } from "./pages/SettingsPage";
+import { DashboardPage } from "./pages/DashboardPage";
 
 export const router = createBrowserRouter([
   {
@@ -26,6 +27,10 @@ export const router = createBrowserRouter([
       {
         path: "cards",
         element: <CardsPage />,
+      },
+      {
+        path: "dashboard",
+        element: <DashboardPage />,
       },
       {
         path: "categories",

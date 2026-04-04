@@ -11,6 +11,7 @@
 import type * as auth from "../auth.js";
 import type * as categories from "../categories.js";
 import type * as creditCards from "../creditCards.js";
+import type * as dashboard from "../dashboard.js";
 import type * as http from "../http.js";
 import type * as productCatalog from "../productCatalog.js";
 import type * as router from "../router.js";
@@ -30,6 +31,7 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   categories: typeof categories;
   creditCards: typeof creditCards;
+  dashboard: typeof dashboard;
   http: typeof http;
   productCatalog: typeof productCatalog;
   router: typeof router;
