@@ -14,7 +14,7 @@ export function Modal({ title, onClose, children }: Props) {
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="relative bg-surface-card rounded-card shadow-float w-full max-w-md max-h-[90vh] overflow-y-auto border border-border-subtle">
+      <div className="custom-scrollbar relative bg-surface-card rounded-card shadow-float w-full max-w-md max-h-[90vh] overflow-y-auto border border-border-subtle">
         <div className="flex items-center justify-between p-5 border-b border-border-subtle">
           <h2 className="text-lg font-semibold text-text-primary">{title}</h2>
           <button
