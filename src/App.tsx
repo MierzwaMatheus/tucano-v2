@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Authenticated, Unauthenticated } from "convex/react";
+import { Authenticated, Unauthenticated, useQuery } from "convex/react";
 import { SignInForm } from "./SignInForm";
-import { SignOutButton } from "./SignOutButton";
+import { api } from "../convex/_generated/api";
+import { UserMenu } from "./components/UserMenu";
 import {
   Eye,
   ArrowLeftRight,
@@ -9,6 +11,7 @@ import {
   CreditCard,
   Tag,
   Settings,
+  User,
 } from "lucide-react";
 
 type Tab = "finance" | "shopping" | "cards" | "categories" | "settings";
@@ -50,11 +53,17 @@ const TABS: { id: Tab; label: string; icon: React.ReactNode; path: string }[] =
 export default function App() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const user = useQuery(api.users.getCurrentUser);
 
   const currentTab = (location.pathname.slice(1) as Tab) || "finance";
 
   const handleTabChange = (path: string) => {
     navigate(path);
+  };
+
+  const toggleUserMenu = () => {
+    setShowUserMenu(!showUserMenu);
   };
 
   return (
@@ -78,7 +87,26 @@ export default function App() {
       <Authenticated>
         <header className="sticky top-0 z-20 bg-surface-card border-b border-border-subtle shadow-card px-4 h-14 flex items-center justify-between">
           <h2 className="text-lg font-bold text-accent">Tucano</h2>
-          <SignOutButton />
+          <button
+            onClick={toggleUserMenu}
+            className="flex items-center gap-2 p-1.5 rounded-button hover:bg-surface-elevated transition-colors"
+          >
+            <div className="w-8 h-8 rounded-full bg-surface-elevated border border-border-subtle flex items-center justify-center overflow-hidden">
+              {user?.photoUrl ? (
+                <img
+                  src={user.photoUrl}
+                  alt="Perfil"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <User size={18} className="text-text-muted" />
+              )}
+            </div>
+            <span className="text-text-primary text-sm font-medium max-w-[120px] truncate">
+              {user?.name || "Usuário"}
+            </span>
+          </button>
+          {showUserMenu && <UserMenu onClose={() => setShowUserMenu(false)} />}
         </header>
 
         <main className="flex-1 pb-20">
