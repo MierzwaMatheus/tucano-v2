@@ -1,8 +1,12 @@
-import React from "react";
+import React, { ChangeEvent, useCallback } from "react";
 import { CreditCard, RefreshCw, BadgeCheck, Layers } from "lucide-react";
 import { Id } from "../../convex/_generated/dataModel";
 import { Toggle } from "./Toggle";
 import { CategorySelect } from "./CategorySelect";
+import {
+  useMonetaryInput,
+  formatMonetaryValue,
+} from "@/hooks/useMonetaryInput";
 import {
   CATEGORY_SELECT,
   FORM_LABELS,
@@ -47,6 +51,16 @@ export const TransactionForm = React.memo(function TransactionForm({
   creditCards,
   onSubmit,
 }: TransactionFormProps): React.ReactElement {
+  const handleAmountChange = useMonetaryInput(
+    form.amount,
+    useCallback(
+      (formattedValue: string, numericValue: string) => {
+        setForm({ ...form, amount: numericValue });
+      },
+      [form, setForm],
+    ),
+  );
+
   return (
     <div className="space-y-4">
       <div
@@ -99,13 +113,12 @@ export const TransactionForm = React.memo(function TransactionForm({
           </label>
           <input
             id="transaction-amount"
-            type="number"
-            step="0.01"
-            min="0"
+            type="text"
+            inputMode="numeric"
             className="w-full px-3 py-2.5 rounded-input bg-surface-elevated border border-border text-text-primary placeholder-text-muted focus:border-accent outline-none"
             placeholder="0,00"
-            value={form.amount}
-            onChange={(e) => setForm({ ...form, amount: e.target.value })}
+            value={formatMonetaryValue(form.amount)}
+            onChange={handleAmountChange}
           />
         </div>
         <div>

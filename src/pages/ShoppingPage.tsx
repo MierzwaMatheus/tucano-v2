@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
@@ -26,6 +26,10 @@ import {
 import { Modal } from "../components/Modal";
 import { CategorySelect } from "../components/CategorySelect";
 import { ConfirmDialog } from "../components/ConfirmDialog";
+import {
+  useMonetaryInput,
+  formatMonetaryValue,
+} from "@/hooks/useMonetaryInput";
 
 export function ShoppingPage() {
   const [selectedListId, setSelectedListId] =
@@ -65,6 +69,16 @@ function ListsOverview({
     year: now.getFullYear(),
     budget: "",
   });
+
+  const handleBudgetChange = useMonetaryInput(
+    form.budget,
+    useCallback(
+      (_formattedValue: string, numericValue: string) => {
+        setForm({ ...form, budget: numericValue });
+      },
+      [form],
+    ),
+  );
 
   async function handleCreate() {
     if (!form.name.trim()) return;
@@ -286,12 +300,12 @@ function ListsOverview({
               </label>
               <input
                 id="list-budget"
-                type="number"
-                step="0.01"
+                type="text"
+                inputMode="numeric"
                 className="w-full px-3 py-2.5 rounded-input bg-surface-elevated border border-border text-text-primary placeholder-text-muted focus:border-accent outline-none"
                 placeholder="0,00"
-                value={form.budget}
-                onChange={(e) => setForm({ ...form, budget: e.target.value })}
+                value={formatMonetaryValue(form.budget)}
+                onChange={handleBudgetChange}
               />
             </div>
             <button
@@ -354,6 +368,16 @@ function ListDetail({
     catalogItemId: undefined as Id<"productCatalog"> | undefined,
     categoryId: undefined as Id<"categories"> | undefined,
   });
+
+  const handlePriceChange = useMonetaryInput(
+    form.price,
+    useCallback(
+      (_formattedValue: string, numericValue: string) => {
+        setForm({ ...form, price: numericValue });
+      },
+      [form],
+    ),
+  );
 
   if (!data) {
     return (
@@ -671,13 +695,13 @@ function ListDetail({
               </label>
               <input
                 id="item-price"
-                type="number"
-                step="0.01"
+                type="text"
+                inputMode="numeric"
                 min="0"
                 className="w-full px-3 py-2.5 rounded-input bg-surface-elevated border border-border text-text-primary placeholder-text-muted focus:border-accent outline-none"
                 placeholder="0,00"
-                value={form.price}
-                onChange={(e) => setForm({ ...form, price: e.target.value })}
+                value={formatMonetaryValue(form.price)}
+                onChange={handlePriceChange}
               />
             </div>
 
