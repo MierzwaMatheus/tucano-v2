@@ -2,9 +2,16 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Authenticated, Unauthenticated } from "convex/react";
 import { SignInForm } from "./SignInForm";
 import { SignOutButton } from "./SignOutButton";
-import { Eye, ArrowLeftRight, Target, CreditCard, Tag } from "lucide-react";
+import {
+  Eye,
+  ArrowLeftRight,
+  Target,
+  CreditCard,
+  Tag,
+  Settings,
+} from "lucide-react";
 
-type Tab = "finance" | "shopping" | "cards" | "categories";
+type Tab = "finance" | "shopping" | "cards" | "categories" | "settings";
 
 const TABS: { id: Tab; label: string; icon: React.ReactNode; path: string }[] =
   [
@@ -31,6 +38,12 @@ const TABS: { id: Tab; label: string; icon: React.ReactNode; path: string }[] =
       label: "Categorias",
       icon: <Tag size={20} />,
       path: "/categories",
+    },
+    {
+      id: "settings",
+      label: "Ajustes",
+      icon: <Settings size={20} />,
+      path: "/settings",
     },
   ];
 

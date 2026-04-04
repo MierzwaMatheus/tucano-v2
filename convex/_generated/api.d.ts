@@ -16,7 +16,9 @@ import type * as productCatalog from "../productCatalog.js";
 import type * as router from "../router.js";
 import type * as shoppingItems from "../shoppingItems.js";
 import type * as shoppingLists from "../shoppingLists.js";
+import type * as storage from "../storage.js";
 import type * as transactions from "../transactions.js";
+import type * as users from "../users.js";
 
 import type {
   ApiFromModules,
@@ -33,7 +35,9 @@ declare const fullApi: ApiFromModules<{
   router: typeof router;
   shoppingItems: typeof shoppingItems;
   shoppingLists: typeof shoppingLists;
+  storage: typeof storage;
   transactions: typeof transactions;
+  users: typeof users;
 }>;
 
 /**

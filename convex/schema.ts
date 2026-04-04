@@ -3,6 +3,20 @@ import { v } from "convex/values";
 import { authTables } from "@convex-dev/auth/server";
 
 const applicationTables = {
+  users: defineTable({
+    email: v.string(),
+    name: v.optional(v.string()),
+    photoUrl: v.optional(v.string()),
+    createdAt: v.optional(v.number()),
+  })
+    .index("by_email", ["email"])
+    .index("by_name", ["name"]),
+
+  userPhotos: defineTable({
+    userId: v.id("users"),
+    storageId: v.id("_storage"),
+    createdAt: v.number(),
+  }).index("by_user", ["userId"]),
   shoppingLists: defineTable({
     userId: v.id("users"),
     name: v.string(),

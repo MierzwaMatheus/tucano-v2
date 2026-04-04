@@ -3,7 +3,7 @@ import { Password } from "@convex-dev/auth/providers/Password";
 import { Anonymous } from "@convex-dev/auth/providers/Anonymous";
 import { query } from "./_generated/server";
 
-export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
+export const { auth, store } = convexAuth({
   providers: [Password, Anonymous],
 });
 
@@ -13,7 +13,7 @@ export const loggedInUser = query({
     if (!userId) {
       return null;
     }
-    const user = await ctx.db.get("users", userId);
+    const user = await ctx.db.get(userId);
     if (!user) {
       return null;
     }
