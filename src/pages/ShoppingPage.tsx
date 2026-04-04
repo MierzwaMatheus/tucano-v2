@@ -625,8 +625,15 @@ function ListDetail({
                           onClick={() => selectCatalogItem(r)}
                           aria-label={`Selecionar ${r.name}`}
                         >
-                          <div className="font-medium text-text-primary text-sm">
-                            {r.name}
+                          <div className="flex items-center gap-2">
+                            <div className="font-medium text-text-primary text-sm">
+                              {r.name}
+                            </div>
+                            {r.defaultBrand && (
+                              <span className="text-xs px-1.5 py-0.5 rounded bg-surface-elevated text-text-muted">
+                                {r.defaultBrand}
+                              </span>
+                            )}
                           </div>
                           <div className="text-xs text-text-muted">
                             {r.defaultUnit} · {formatBRL(r.lastPriceCents)}
