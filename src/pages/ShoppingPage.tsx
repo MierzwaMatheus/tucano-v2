@@ -222,10 +222,14 @@ function ListsOverview({
         >
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">
+              <label
+                htmlFor="list-name"
+                className="block text-sm font-medium text-text-secondary mb-1"
+              >
                 Nome
               </label>
               <input
+                id="list-name"
                 className="w-full px-3 py-2.5 rounded-input bg-surface-elevated border border-border text-text-primary placeholder-text-muted focus:border-accent focus:ring-1 focus:ring-accent outline-none"
                 placeholder="Ex: Mercado de abril"
                 value={form.name}
@@ -234,10 +238,14 @@ function ListsOverview({
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">
+                <label
+                  htmlFor="list-month"
+                  className="block text-sm font-medium text-text-secondary mb-1"
+                >
                   Mês
                 </label>
                 <select
+                  id="list-month"
                   className="w-full px-3 py-2.5 rounded-input bg-surface-elevated border border-border text-text-primary focus:border-accent outline-none"
                   value={form.month}
                   onChange={(e) =>
@@ -252,10 +260,14 @@ function ListsOverview({
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">
+                <label
+                  htmlFor="list-year"
+                  className="block text-sm font-medium text-text-secondary mb-1"
+                >
                   Ano
                 </label>
                 <input
+                  id="list-year"
                   type="number"
                   className="w-full px-3 py-2.5 rounded-input bg-surface-elevated border border-border text-text-primary focus:border-accent outline-none"
                   value={form.year}
@@ -266,10 +278,14 @@ function ListsOverview({
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">
+              <label
+                htmlFor="list-budget"
+                className="block text-sm font-medium text-text-secondary mb-1"
+              >
                 Orçamento (R$)
               </label>
               <input
+                id="list-budget"
                 type="number"
                 step="0.01"
                 className="w-full px-3 py-2.5 rounded-input bg-surface-elevated border border-border text-text-primary placeholder-text-muted focus:border-accent outline-none"
@@ -279,9 +295,11 @@ function ListsOverview({
               />
             </div>
             <button
+              type="submit"
               onClick={handleCreate}
               disabled={!form.name.trim()}
               className="w-full py-3 bg-accent text-surface-page rounded-button font-semibold hover:bg-accent-hover transition-colors disabled:opacity-50"
+              aria-disabled={!form.name.trim()}
             >
               {SHOPPING_LABELS.CREATE_LIST}
             </button>
@@ -538,42 +556,57 @@ function ListDetail({
         >
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">
+              <label
+                htmlFor="item-search"
+                className="block text-sm font-medium text-text-secondary mb-1"
+              >
                 {SHOPPING_LABELS.SEARCH_CATALOG}
               </label>
               <input
+                id="item-search"
                 className="w-full px-3 py-2.5 rounded-input bg-surface-elevated border border-border text-text-primary placeholder-text-muted focus:border-accent outline-none"
                 placeholder="Digite para buscar..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                aria-describedby="search-hint"
               />
               {searchTerm.length >= 2 &&
                 searchResults &&
                 searchResults.length > 0 && (
-                  <div className="mt-1 border border-border rounded-input overflow-hidden shadow-card">
+                  <ul
+                    className="mt-1 border border-border rounded-input overflow-hidden shadow-card"
+                    role="listbox"
+                  >
                     {searchResults.map((r) => (
-                      <button
-                        key={r._id}
-                        className="w-full text-left px-3 py-2.5 hover:bg-surface-elevated transition-colors border-b last:border-b-0 border-border-subtle"
-                        onClick={() => selectCatalogItem(r)}
-                      >
-                        <div className="font-medium text-text-primary text-sm">
-                          {r.name}
-                        </div>
-                        <div className="text-xs text-text-muted">
-                          {r.defaultUnit} · {formatBRL(r.lastPriceCents)}
-                        </div>
-                      </button>
+                      <li key={r._id}>
+                        <button
+                          type="button"
+                          className="w-full text-left px-3 py-2.5 hover:bg-surface-elevated transition-colors border-b last:border-b-0 border-border-subtle"
+                          onClick={() => selectCatalogItem(r)}
+                          aria-label={`Selecionar ${r.name}`}
+                        >
+                          <div className="font-medium text-text-primary text-sm">
+                            {r.name}
+                          </div>
+                          <div className="text-xs text-text-muted">
+                            {r.defaultUnit} · {formatBRL(r.lastPriceCents)}
+                          </div>
+                        </button>
+                      </li>
                     ))}
-                  </div>
+                  </ul>
                 )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">
+              <label
+                htmlFor="item-name"
+                className="block text-sm font-medium text-text-secondary mb-1"
+              >
                 {FORM_LABELS.NAME_REQUIRED}
               </label>
               <input
+                id="item-name"
                 className="w-full px-3 py-2.5 rounded-input bg-surface-elevated border border-border text-text-primary placeholder-text-muted focus:border-accent outline-none"
                 placeholder="Ex: Arroz"
                 value={form.name}
@@ -589,10 +622,14 @@ function ListDetail({
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">
+                <label
+                  htmlFor="item-quantity"
+                  className="block text-sm font-medium text-text-secondary mb-1"
+                >
                   {FORM_LABELS.QUANTITY}
                 </label>
                 <input
+                  id="item-quantity"
                   type="number"
                   step="0.001"
                   min="0.001"
@@ -604,10 +641,14 @@ function ListDetail({
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">
+                <label
+                  htmlFor="item-unit"
+                  className="block text-sm font-medium text-text-secondary mb-1"
+                >
                   {FORM_LABELS.UNIT}
                 </label>
                 <select
+                  id="item-unit"
                   className="w-full px-3 py-2.5 rounded-input bg-surface-elevated border border-border text-text-primary focus:border-accent outline-none"
                   value={form.unit}
                   onChange={(e) => setForm({ ...form, unit: e.target.value })}
@@ -622,10 +663,14 @@ function ListDetail({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">
+              <label
+                htmlFor="item-price"
+                className="block text-sm font-medium text-text-secondary mb-1"
+              >
                 {FORM_LABELS.UNIT_PRICE_REQUIRED}
               </label>
               <input
+                id="item-price"
                 type="number"
                 step="0.01"
                 min="0"
@@ -637,10 +682,14 @@ function ListDetail({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">
+              <label
+                htmlFor="item-brand"
+                className="block text-sm font-medium text-text-secondary mb-1"
+              >
                 {FORM_LABELS.BRAND}
               </label>
               <input
+                id="item-brand"
                 className="w-full px-3 py-2.5 rounded-input bg-surface-elevated border border-border text-text-primary placeholder-text-muted focus:border-accent outline-none"
                 placeholder="Ex: Camil"
                 value={form.brand}
@@ -657,9 +706,11 @@ function ListDetail({
             />
 
             <button
+              type="submit"
               onClick={handleAdd}
               disabled={!form.name.trim() || !form.price}
               className="w-full py-3 bg-accent text-surface-page rounded-button font-semibold hover:bg-accent-hover transition-colors disabled:opacity-50"
+              aria-disabled={!form.name.trim() || !form.price}
             >
               {ACTIONS.ADD}
             </button>

@@ -258,10 +258,14 @@ export function CardsPage() {
         <Modal title="Novo Cartão" onClose={() => setShowCreate(false)}>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">
+              <label
+                htmlFor="card-name"
+                className="block text-sm font-medium text-text-secondary mb-1"
+              >
                 Nome do cartão *
               </label>
               <input
+                id="card-name"
                 className="w-full px-3 py-2.5 rounded-input bg-surface-elevated border border-border text-text-primary placeholder-text-muted focus:border-accent outline-none"
                 placeholder="Ex: Nubank"
                 value={form.name}
@@ -270,10 +274,14 @@ export function CardsPage() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">
+                <label
+                  htmlFor="card-closing-day"
+                  className="block text-sm font-medium text-text-secondary mb-1"
+                >
                   Dia de fechamento
                 </label>
                 <input
+                  id="card-closing-day"
                   type="number"
                   min="1"
                   max="31"
@@ -285,10 +293,14 @@ export function CardsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">
+                <label
+                  htmlFor="card-payment-day"
+                  className="block text-sm font-medium text-text-secondary mb-1"
+                >
                   Dia de vencimento
                 </label>
                 <input
+                  id="card-payment-day"
                   type="number"
                   min="1"
                   max="31"
@@ -301,10 +313,14 @@ export function CardsPage() {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">
+              <label
+                htmlFor="card-limit"
+                className="block text-sm font-medium text-text-secondary mb-1"
+              >
                 Limite de crédito
               </label>
               <input
+                id="card-limit"
                 type="number"
                 step="0.01"
                 min="0"
@@ -317,24 +333,34 @@ export function CardsPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-2">
+              <span className="block text-sm font-medium text-text-secondary mb-2">
                 Cor
-              </label>
-              <div className="flex flex-wrap gap-2">
+              </span>
+              <div
+                className="flex flex-wrap gap-2"
+                role="radiogroup"
+                aria-label="Selecione a cor do cartão"
+              >
                 {CARD_COLORS.map((c) => (
                   <button
                     key={c}
+                    type="button"
                     className={`w-8 h-8 rounded-full transition-transform ${form.color === c ? "scale-125 ring-2 ring-offset-1 ring-offset-surface-card ring-text-muted" : ""}`}
                     style={{ background: c }}
                     onClick={() => setForm({ ...form, color: c })}
+                    aria-checked={form.color === c}
+                    role="radio"
+                    aria-label={`Cor ${c}`}
                   />
                 ))}
               </div>
             </div>
             <button
+              type="submit"
               onClick={handleCreate}
               disabled={!form.name.trim()}
               className="w-full py-3 bg-accent text-surface-page rounded-button font-semibold hover:bg-accent-hover transition-colors disabled:opacity-50"
+              aria-disabled={!form.name.trim()}
             >
               Criar Cartão
             </button>
