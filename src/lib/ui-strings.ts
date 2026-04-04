@@ -34,6 +34,7 @@ export const FORM_LABELS = {
   INSTALLMENTS: "Parcelas",
   RECURRING: "Recorrente mensal (12 meses)",
   INCLUDE_IN_STATS: "Incluir no resumo",
+  IS_SUBSCRIPTION: "É assinatura?",
   BRAND: "Marca (opcional)",
   UNIT: "Unidade",
   QUANTITY: "Quantidade",

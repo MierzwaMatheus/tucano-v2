@@ -11,6 +11,7 @@ interface Props {
 export function Modal({ title, onClose, children }: Props) {
   const modalRef = useRef<HTMLDivElement>(null);
   const previousActiveElement = useRef<HTMLElement | null>(null);
+  const hasFocused = useRef(false);
 
   useBodyScrollLock(true);
 
@@ -58,9 +59,12 @@ export function Modal({ title, onClose, children }: Props) {
 
     document.addEventListener("keydown", handleKeyDown);
 
-    const focusableElements = getFocusableElements();
-    if (focusableElements.length > 0) {
-      focusableElements[0].focus();
+    if (!hasFocused.current) {
+      const focusableElements = getFocusableElements();
+      if (focusableElements.length > 0) {
+        focusableElements[0].focus();
+        hasFocused.current = true;
+      }
     }
 
     return () => {
@@ -69,7 +73,9 @@ export function Modal({ title, onClose, children }: Props) {
         previousActiveElement.current.focus();
       }
     };
-  }, [handleKeyDown, getFocusableElements]);
+    // Focus management should run only once on mount, not on every children change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div
