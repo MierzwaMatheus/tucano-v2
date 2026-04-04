@@ -30,6 +30,10 @@ import {
   useMonetaryInput,
   formatMonetaryValue,
 } from "@/hooks/useMonetaryInput";
+import {
+  FloatingActionButton,
+  ResponsiveModal,
+} from "../components/FloatingActionButton";
 
 export function ShoppingPage() {
   const [selectedListId, setSelectedListId] =
@@ -98,7 +102,7 @@ function ListsOverview({
   }
 
   return (
-    <div className="p-4 max-w-2xl mx-auto">
+    <div className="p-4 pb-24 max-w-2xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-text-primary">
@@ -110,7 +114,7 @@ function ListsOverview({
         </div>
         <button
           onClick={() => setShowCreate(true)}
-          className="flex items-center gap-2 bg-accent text-surface-page px-4 py-2.5 rounded-button font-medium hover:bg-accent-hover transition-colors shadow-card"
+          className="hidden md:flex items-center gap-2 bg-accent text-surface-page px-4 py-2.5 rounded-button font-medium hover:bg-accent-hover transition-colors shadow-card"
         >
           <Plus size={18} />
           {SHOPPING_LABELS.NEW_LIST}
@@ -229,10 +233,16 @@ function ListsOverview({
         </div>
       )}
 
+      <FloatingActionButton
+        onClick={() => setShowCreate(true)}
+        ariaLabel="Nova lista de compras"
+      />
+
       {showCreate && (
-        <Modal
-          title="{SHOPPING_LABELS.NEW_LIST_TITLE}"
+        <ResponsiveModal
+          title={SHOPPING_LABELS.NEW_LIST_TITLE}
           onClose={() => setShowCreate(false)}
+          isOpen={showCreate}
         >
           <div className="space-y-4">
             <div>
@@ -318,7 +328,7 @@ function ListsOverview({
               {SHOPPING_LABELS.CREATE_LIST}
             </button>
           </div>
-        </Modal>
+        </ResponsiveModal>
       )}
 
       {deleteTarget && (
@@ -499,10 +509,10 @@ function ListDetail({
         </button>
       )}
 
-      {/* Add item button */}
+      {/* Add item button - desktop only */}
       <button
         onClick={() => setShowAdd(true)}
-        className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-accent/30 text-accent rounded-card font-medium hover:border-accent/60 hover:bg-accent-subtle transition-colors mb-4"
+        className="hidden md:flex items-center justify-center gap-2 py-3 border-2 border-dashed border-accent/30 text-accent rounded-card font-medium hover:border-accent/60 hover:bg-accent-subtle transition-colors mb-4"
       >
         <Plus size={18} />
         {SHOPPING_LABELS.ADD_ITEM_BUTTON}
@@ -570,13 +580,19 @@ function ListDetail({
         </div>
       )}
 
+      <FloatingActionButton
+        onClick={() => setShowAdd(true)}
+        ariaLabel="Adicionar item"
+      />
+
       {showAdd && (
-        <Modal
+        <ResponsiveModal
           title={MODAL_TITLES.ADD_ITEM}
           onClose={() => {
             setShowAdd(false);
             setSearchTerm("");
           }}
+          isOpen={showAdd}
         >
           <div className="space-y-4">
             <div>
@@ -739,7 +755,7 @@ function ListDetail({
               {ACTIONS.ADD}
             </button>
           </div>
-        </Modal>
+        </ResponsiveModal>
       )}
     </div>
   );

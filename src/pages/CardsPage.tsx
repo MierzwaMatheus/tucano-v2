@@ -5,8 +5,11 @@ import { Id } from "../../convex/_generated/dataModel";
 import { Plus, CreditCard, CheckCircle2, Circle, Trash2 } from "lucide-react";
 import { formatBRL } from "../lib/currency";
 import { MonthNavigator } from "../components/MonthNavigator";
-import { Modal } from "../components/Modal";
 import { ConfirmDialog } from "../components/ConfirmDialog";
+import {
+  FloatingActionButton,
+  ResponsiveModal,
+} from "../components/FloatingActionButton";
 
 const CARD_COLORS = [
   "#2BD97F",
@@ -78,7 +81,7 @@ export function CardsPage() {
   const faturaUnpaid = fatura.filter((t) => t.status === "pending");
 
   return (
-    <div className="p-4 max-w-2xl mx-auto">
+    <div className="p-4 pb-24 max-w-2xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-text-primary">Cartões</h1>
@@ -88,7 +91,7 @@ export function CardsPage() {
         </div>
         <button
           onClick={() => setShowCreate(true)}
-          className="flex items-center gap-2 bg-accent text-surface-page px-4 py-2.5 rounded-button font-medium hover:bg-accent-hover transition-colors shadow-card"
+          className="hidden md:flex items-center gap-2 bg-accent text-surface-page px-4 py-2.5 rounded-button font-medium hover:bg-accent-hover transition-colors shadow-card"
         >
           <Plus size={18} />
           Novo Cartão
@@ -254,8 +257,17 @@ export function CardsPage() {
         </div>
       )}
 
+      <FloatingActionButton
+        onClick={() => setShowCreate(true)}
+        ariaLabel="Novo cartão"
+      />
+
       {showCreate && (
-        <Modal title="Novo Cartão" onClose={() => setShowCreate(false)}>
+        <ResponsiveModal
+          title="Novo Cartão"
+          onClose={() => setShowCreate(false)}
+          isOpen={showCreate}
+        >
           <div className="space-y-4">
             <div>
               <label
@@ -345,7 +357,11 @@ export function CardsPage() {
                   <button
                     key={c}
                     type="button"
-                    className={`w-8 h-8 rounded-full transition-transform ${form.color === c ? "scale-125 ring-2 ring-offset-1 ring-offset-surface-card ring-text-muted" : ""}`}
+                    className={`w-8 h-8 rounded-full transition-transform ${
+                      form.color === c
+                        ? "scale-125 ring-2 ring-offset-1 ring-offset-surface-card ring-text-muted"
+                        : ""
+                    }`}
                     style={{ background: c }}
                     onClick={() => setForm({ ...form, color: c })}
                     aria-checked={form.color === c}
@@ -365,7 +381,7 @@ export function CardsPage() {
               Criar Cartão
             </button>
           </div>
-        </Modal>
+        </ResponsiveModal>
       )}
 
       {disableTarget && (

@@ -31,10 +31,13 @@ import {
 } from "../lib/ui-strings";
 import { MONTHS } from "../lib/dates";
 import { MonthNavigator } from "../components/MonthNavigator";
-import { Modal } from "../components/Modal";
 import { CategorySelect } from "../components/CategorySelect";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { TransactionForm } from "../components/TransactionForm";
+import {
+  FloatingActionButton,
+  ResponsiveModal,
+} from "../components/FloatingActionButton";
 
 export function FinancePage() {
   const now = new Date();
@@ -134,12 +137,12 @@ export function FinancePage() {
   }
 
   return (
-    <div className="p-4 max-w-2xl mx-auto">
+    <div className="p-4 pb-24 max-w-2xl mx-auto">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold text-text-primary">Visão</h1>
         <button
           onClick={() => setShowAdd(true)}
-          className="flex items-center gap-2 bg-accent text-surface-page px-4 py-2.5 rounded-button font-medium hover:bg-accent-hover transition-colors shadow-card"
+          className="hidden md:flex items-center gap-2 bg-accent text-surface-page px-4 py-2.5 rounded-button font-medium hover:bg-accent-hover transition-colors shadow-card"
         >
           <Plus size={18} />
           {ACTIONS.ADD}
@@ -258,10 +261,16 @@ export function FinancePage() {
         </div>
       )}
 
+      <FloatingActionButton
+        onClick={() => setShowAdd(true)}
+        ariaLabel="Adicionar transação"
+      />
+
       {showAdd && (
-        <Modal
+        <ResponsiveModal
           title={MODAL_TITLES.NEW_TRANSACTION}
           onClose={() => setShowAdd(false)}
+          isOpen={showAdd}
         >
           <TransactionForm
             form={form}
@@ -270,7 +279,7 @@ export function FinancePage() {
             creditCards={creditCards}
             onSubmit={handleAdd}
           />
-        </Modal>
+        </ResponsiveModal>
       )}
 
       {deleteTarget && (

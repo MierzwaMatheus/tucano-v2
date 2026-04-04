@@ -3,8 +3,11 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { Plus, Tag, Pencil, X, Check } from "lucide-react";
-import { Modal } from "../components/Modal";
 import { ConfirmDialog } from "../components/ConfirmDialog";
+import {
+  FloatingActionButton,
+  ResponsiveModal,
+} from "../components/FloatingActionButton";
 
 const CATEGORY_COLORS = [
   "#2BD97F",
@@ -125,7 +128,7 @@ export function CategoriesPage() {
   }
 
   return (
-    <div className="p-4 max-w-2xl mx-auto">
+    <div className="p-4 pb-24 max-w-2xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-text-primary">Categorias</h1>
@@ -135,7 +138,7 @@ export function CategoriesPage() {
         </div>
         <button
           onClick={() => setShowCreate(true)}
-          className="flex items-center gap-2 bg-accent text-surface-page px-4 py-2.5 rounded-button font-medium hover:bg-accent-hover transition-colors shadow-card"
+          className="hidden md:flex items-center gap-2 bg-accent text-surface-page px-4 py-2.5 rounded-button font-medium hover:bg-accent-hover transition-colors shadow-card"
         >
           <Plus size={18} />
           Nova
@@ -238,9 +241,18 @@ export function CategoriesPage() {
         </div>
       )}
 
+      <FloatingActionButton
+        onClick={() => setShowCreate(true)}
+        ariaLabel="Nova categoria"
+      />
+
       {/* Create modal */}
       {showCreate && (
-        <Modal title="Nova Categoria" onClose={() => setShowCreate(false)}>
+        <ResponsiveModal
+          title="Nova Categoria"
+          onClose={() => setShowCreate(false)}
+          isOpen={showCreate}
+        >
           <div className="space-y-4">
             <div>
               <label
@@ -351,12 +363,16 @@ export function CategoriesPage() {
               Criar Categoria
             </button>
           </div>
-        </Modal>
+        </ResponsiveModal>
       )}
 
       {/* Edit modal */}
       {editTarget && (
-        <Modal title="Editar Categoria" onClose={() => setEditTarget(null)}>
+        <ResponsiveModal
+          title="Editar Categoria"
+          onClose={() => setEditTarget(null)}
+          isOpen={!!editTarget}
+        >
           <div className="space-y-4">
             <div>
               <label
@@ -448,7 +464,7 @@ export function CategoriesPage() {
               </button>
             </div>
           </div>
-        </Modal>
+        </ResponsiveModal>
       )}
 
       {deleteTarget && (
