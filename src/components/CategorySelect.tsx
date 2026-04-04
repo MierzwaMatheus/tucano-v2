@@ -28,7 +28,9 @@ export function CategorySelect({
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [highlightedIndex, setHighlightedIndex] = useState(0);
-  const { position: dropdownPosition } = useDropdownPosition();
+  const { position: dropdownPosition, triggerRef } = useDropdownPosition({
+    dropdownHeight: 300,
+  });
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
@@ -141,7 +143,7 @@ export function CategorySelect({
           {label}
         </label>
       )}
-      <div className="relative">
+      <div className="relative" ref={triggerRef}>
         <div
           className={`w-full px-3 py-2.5 rounded-input bg-surface-elevated border border-border text-text-primary cursor-pointer flex items-center justify-between gap-2 ${
             isOpen ? "border-accent" : ""
