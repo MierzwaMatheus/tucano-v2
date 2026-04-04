@@ -15,6 +15,8 @@ import {
   RefreshCw,
   Layers,
   BadgeCheck,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { formatBRL, toCents, fromCents } from "../lib/currency";
 import {
@@ -585,6 +587,7 @@ function TransactionRow({
   tx: {
     _id: Id<"transactions">;
     name: string;
+    description?: string;
     amountCents: number;
     type: "income" | "expense";
     status: "pending" | "paid";
@@ -602,9 +605,13 @@ function TransactionRow({
   onDelete: () => void;
 }) {
   const isIncome = tx.type === "income";
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const hasDescription = tx.description && tx.description.trim().length > 0;
+  const isLongDescription = hasDescription && tx.description!.length > 60;
+
   return (
-    <div className="bg-surface-card rounded-card border border-border-subtle shadow-card flex items-center gap-3 px-4 py-3">
-      <button onClick={onToggle} className="flex-shrink-0">
+    <div className="bg-surface-card rounded-card border border-border-subtle shadow-card flex items-start gap-3 px-4 py-3">
+      <button onClick={onToggle} className="flex-shrink-0 mt-0.5">
         {tx.status === "paid" ? (
           <CheckCircle2
             size={20}
@@ -627,7 +634,26 @@ function TransactionRow({
             <RefreshCw size={11} className="inline ml-1 text-text-muted" />
           )}
         </div>
-        <div className="flex items-center gap-1.5 flex-wrap">
+        {hasDescription && (
+          <div className="text-xs text-text-muted mt-0.5 flex items-start gap-1">
+            <span className={isDescriptionExpanded ? "" : "line-clamp-2"}>
+              {tx.description}
+            </span>
+            {isLongDescription && (
+              <button
+                onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                className="flex-shrink-0 text-text-muted hover:text-text-secondary transition-colors"
+              >
+                {isDescriptionExpanded ? (
+                  <ChevronUp size={14} />
+                ) : (
+                  <ChevronDown size={14} />
+                )}
+              </button>
+            )}
+          </div>
+        )}
+        <div className="flex items-center gap-1.5 flex-wrap mt-1">
           {tx.category && (
             <span className="text-xs text-text-muted flex items-center gap-1">
               {tx.category.icon && <span>{tx.category.icon}</span>}
@@ -662,14 +688,14 @@ function TransactionRow({
         </div>
       </div>
       <div
-        className={`font-bold text-sm flex-shrink-0 ${isIncome ? "text-accent" : "text-text-primary"}`}
+        className={`font-bold text-sm flex-shrink-0 mt-0.5 ${isIncome ? "text-accent" : "text-text-primary"}`}
       >
         {isIncome ? "+" : "-"}
         {formatBRL(tx.amountCents)}
       </div>
       <button
         onClick={onDelete}
-        className="flex-shrink-0 p-1.5 text-text-muted hover:text-status-error transition-colors"
+        className="flex-shrink-0 p-1.5 text-text-muted hover:text-status-error transition-colors mt-0.5"
       >
         <Trash2 size={15} />
       </button>
