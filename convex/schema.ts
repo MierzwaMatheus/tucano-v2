@@ -100,6 +100,7 @@ const applicationTables = {
     name: v.string(),
     closingDay: v.number(),
     paymentDay: v.number(),
+    creditLimitCents: v.optional(v.number()),
     isEnabled: v.boolean(),
     color: v.optional(v.string()),
     createdAt: v.number(),

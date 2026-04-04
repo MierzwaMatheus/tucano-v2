@@ -22,6 +22,7 @@ export const create = mutation({
     closingDay: v.number(),
     paymentDay: v.number(),
     color: v.optional(v.string()),
+    creditLimitCents: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
@@ -33,6 +34,7 @@ export const create = mutation({
       closingDay: args.closingDay,
       paymentDay: args.paymentDay,
       color: args.color,
+      creditLimitCents: args.creditLimitCents,
       isEnabled: true,
       createdAt: Date.now(),
     });
@@ -46,6 +48,7 @@ export const update = mutation({
     closingDay: v.optional(v.number()),
     paymentDay: v.optional(v.number()),
     color: v.optional(v.string()),
+    creditLimitCents: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
@@ -82,7 +85,7 @@ export const listFatura = query({
         q
           .eq("creditCardId", args.cardId)
           .eq("competenceYear", args.year)
-          .eq("competenceMonth", args.month)
+          .eq("competenceMonth", args.month),
       )
       .collect();
   },
@@ -104,11 +107,13 @@ export const payFatura = mutation({
         q
           .eq("creditCardId", args.cardId)
           .eq("competenceYear", args.year)
-          .eq("competenceMonth", args.month)
+          .eq("competenceMonth", args.month),
       )
       .filter((q) => q.eq(q.field("status"), "pending"))
       .collect();
 
-    await Promise.all(items.map((t) => ctx.db.patch(t._id, { status: "paid" })));
+    await Promise.all(
+      items.map((t) => ctx.db.patch(t._id, { status: "paid" })),
+    );
   },
 });

@@ -133,7 +133,7 @@ export function CategorySelect({
 
         {isOpen && (
           <div
-            className="absolute z-50 w-full mt-1 bg-surface-card border border-border rounded-input shadow-card overflow-hidden"
+            className="absolute z-[60] w-full mt-1 bg-surface-card border border-border rounded-input shadow-card overflow-hidden"
             data-testid="category-select-dropdown"
           >
             <div className="p-2 border-b border-border-subtle">
