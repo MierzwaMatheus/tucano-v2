@@ -7,10 +7,12 @@ const applicationTables = {
     email: v.string(),
     name: v.optional(v.string()),
     photoUrl: v.optional(v.string()),
+    telegramId: v.optional(v.string()),
     createdAt: v.optional(v.number()),
   })
     .index("by_email", ["email"])
-    .index("by_name", ["name"]),
+    .index("by_name", ["name"])
+    .index("by_telegram_id", ["telegramId"]),
 
   userPhotos: defineTable({
     userId: v.id("users"),

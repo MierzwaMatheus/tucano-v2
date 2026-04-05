@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as aiAgent from "../aiAgent.js";
 import type * as auth from "../auth.js";
 import type * as categories from "../categories.js";
 import type * as creditCards from "../creditCards.js";
@@ -18,6 +19,8 @@ import type * as router from "../router.js";
 import type * as shoppingItems from "../shoppingItems.js";
 import type * as shoppingLists from "../shoppingLists.js";
 import type * as storage from "../storage.js";
+import type * as telegramHelpers from "../telegramHelpers.js";
+import type * as telegramWebhook from "../telegramWebhook.js";
 import type * as transactions from "../transactions.js";
 import type * as users from "../users.js";
 
@@ -28,6 +31,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  aiAgent: typeof aiAgent;
   auth: typeof auth;
   categories: typeof categories;
   creditCards: typeof creditCards;
@@ -38,6 +42,8 @@ declare const fullApi: ApiFromModules<{
   shoppingItems: typeof shoppingItems;
   shoppingLists: typeof shoppingLists;
   storage: typeof storage;
+  telegramHelpers: typeof telegramHelpers;
+  telegramWebhook: typeof telegramWebhook;
   transactions: typeof transactions;
   users: typeof users;
 }>;
