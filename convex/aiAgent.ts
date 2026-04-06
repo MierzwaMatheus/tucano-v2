@@ -223,12 +223,15 @@ export { validateActionParams };
 export const processMessage = httpAction(async (ctx, request) => {
   try {
     const body = await request.json();
-    const { message, userId } = body as {
-      message: string;
+    const { message, userId, transcription } = body as {
+      message?: string;
       userId: Id<"users">;
+      transcription?: string;
     };
 
-    if (!message || !userId) {
+    const messageText = transcription || message;
+
+    if (!messageText || !userId) {
       return new Response("Mensagem ou userId ausente", { status: 400 });
     }
 
@@ -266,7 +269,7 @@ export const processMessage = httpAction(async (ctx, request) => {
               model: "qwen/qwen3.5-9b",
               messages: [
                 { role: "system", content: enrichedPrompt },
-                { role: "user", content: message },
+                { role: "user", content: messageText },
               ],
               temperature: 0.3,
               max_tokens: 500,
@@ -311,6 +314,7 @@ export const processMessage = httpAction(async (ctx, request) => {
     const content = data.choices?.[0]?.message?.content;
 
     if (!content) {
+      console.error("[AI Agent] Resposta vazia da IA");
       return new Response(JSON.stringify({ error: "Sem resposta da IA" }), {
         status: 500,
       });
@@ -328,7 +332,9 @@ export const processMessage = httpAction(async (ctx, request) => {
         throw new Error("No JSON found");
       }
       parsed = JSON.parse(jsonMatch[0]);
-    } catch {
+      console.log("[AI Agent] Ação parseada:", parsed.action);
+    } catch (e) {
+      console.error("[AI Agent] Erro ao parsear JSON:", e);
       parsed = {
         action: "unknown",
         params: {},
@@ -342,7 +348,7 @@ export const processMessage = httpAction(async (ctx, request) => {
     try {
       validateActionParams(parsed.action, params);
     } catch (validationError) {
-      console.error("[Telegram] Validation error:", validationError);
+      console.error("[AI Agent] Erro de validação:", validationError);
       return new Response(
         JSON.stringify({
           success: false,
@@ -461,7 +467,7 @@ export const processMessage = httpAction(async (ctx, request) => {
       { status: 200 },
     );
   } catch (error) {
-    console.error("[Telegram] Internal error:", error);
+    console.error("[AI Agent] Erro interno:", error);
     return new Response(
       JSON.stringify({
         error: "Erro interno",

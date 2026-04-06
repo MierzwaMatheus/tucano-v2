@@ -19,6 +19,7 @@ import type * as router from "../router.js";
 import type * as shoppingItems from "../shoppingItems.js";
 import type * as shoppingLists from "../shoppingLists.js";
 import type * as storage from "../storage.js";
+import type * as telegramAudio from "../telegramAudio.js";
 import type * as telegramHelpers from "../telegramHelpers.js";
 import type * as telegramUseCases from "../telegramUseCases.js";
 import type * as telegramWebhook from "../telegramWebhook.js";
@@ -43,6 +44,7 @@ declare const fullApi: ApiFromModules<{
   shoppingItems: typeof shoppingItems;
   shoppingLists: typeof shoppingLists;
   storage: typeof storage;
+  telegramAudio: typeof telegramAudio;
   telegramHelpers: typeof telegramHelpers;
   telegramUseCases: typeof telegramUseCases;
   telegramWebhook: typeof telegramWebhook;
