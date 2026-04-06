@@ -139,6 +139,18 @@ const applicationTables = {
   })
     .index("by_user", ["userId"])
     .index("by_user_type", ["userId", "type"]),
+
+  conversationContext: defineTable({
+    userId: v.id("users"),
+    messages: v.array(
+      v.object({
+        role: v.union(v.literal("user"), v.literal("assistant")),
+        content: v.string(),
+        timestamp: v.number(),
+      }),
+    ),
+    lastMessageAt: v.number(),
+  }).index("by_user", ["userId"]),
 };
 
 export default defineSchema({

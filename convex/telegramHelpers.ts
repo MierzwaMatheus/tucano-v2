@@ -626,3 +626,81 @@ export const getAllShoppingListsInternal = internalQuery({
       .take(50);
   },
 });
+
+export const getUserConversationContextInternal = internalQuery({
+  args: {
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    return await getUserConversationContext(ctx.db, args.userId);
+  },
+});
+
+export const addMessageToContextInternal = internalMutation({
+  args: {
+    userId: v.id("users"),
+    role: v.union(v.literal("user"), v.literal("assistant")),
+    content: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await addMessageToContext(ctx.db, args.userId, args.role, args.content);
+  },
+});
+
+const CONTEXT_EXPIRY_MS = 60 * 1000;
+const MAX_MESSAGES = 5;
+
+export async function getUserConversationContext(
+  db: DatabaseReader,
+  userId: Id<"users">,
+): Promise<{ role: string; content: string; timestamp: number }[]> {
+  const context = await db
+    .query("conversationContext")
+    .withIndex("by_user", (q) => q.eq("userId", userId))
+    .first();
+
+  if (!context) {
+    return [];
+  }
+
+  const now = Date.now();
+  const validMessages = context.messages.filter(
+    (m) => now - m.timestamp < CONTEXT_EXPIRY_MS,
+  );
+
+  return validMessages.slice(-MAX_MESSAGES);
+}
+
+export async function addMessageToContext(
+  db: DatabaseWriter,
+  userId: Id<"users">,
+  role: "user" | "assistant",
+  content: string,
+): Promise<void> {
+  const existingContext = await db
+    .query("conversationContext")
+    .withIndex("by_user", (q) => q.eq("userId", userId))
+    .first();
+
+  const now = Date.now();
+  const newMessage = { role, content, timestamp: now };
+
+  if (existingContext) {
+    const validMessages = existingContext.messages.filter(
+      (m) => now - m.timestamp < CONTEXT_EXPIRY_MS,
+    );
+
+    const updatedMessages = [...validMessages, newMessage].slice(-MAX_MESSAGES);
+
+    await db.patch(existingContext._id, {
+      messages: updatedMessages,
+      lastMessageAt: now,
+    });
+  } else {
+    await db.insert("conversationContext", {
+      userId,
+      messages: [newMessage],
+      lastMessageAt: now,
+    });
+  }
+}

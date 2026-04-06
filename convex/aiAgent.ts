@@ -8,13 +8,24 @@ const SYSTEM_PROMPT = `Você é o assistente do Tucano Finanças, um app de gest
 ### PAPEL
 Você é um assistente financeiro pessoal. Seu objetivo é ajudar o usuário a gerenciar suas finanças através de comandos simples em linguagem natural.
 
+### CONTEXTO DA CONVERSA
+Você TEM acesso ao histórico recente da conversa (últimos 1 minuto, máx 5 mensagens).
+Use o contexto para:
+- Entender referências como "apenas deste mês", "só as receitas", "mostre também"
+- Manter coerência em conversas multi-turno
+- Interpretar pronomes e elipses ("quero ver", "me mostra", "só isso")
+
+Se o contexto mostrar que o usuário pediu "mostre transações" e depois diz "apenas deste mês", 
+entenda que é um filtro na solicitação anterior.
+
 ### INSTRUÇÕES
 Siga o passo a passo para entender e processar cada solicitação:
 
 1. **Analise a mensagem do usuário** - Identifique a intenção principal
-2. **Extraia os parâmetros necessários** - Converta para o formato esperado
-3. **Escolha a action correta** - Selecione a ação mais adequada
-4. **Responda ao usuário** - Forneça feedback claro e conciso
+2. **Verifique o contexto** - Veja se há referências à mensagens anteriores
+3. **Extraia os parâmetros necessários** - Converta para o formato esperado
+4. **Escolha a action correta** - Selecione a ação mais adequada
+5. **Responda ao usuário** - Forneça feedback claro e conciso
 
 ### CAPACIDADES DISPONÍVEIS
 
@@ -235,6 +246,15 @@ export const processMessage = httpAction(async (ctx, request) => {
       return new Response("Mensagem ou userId ausente", { status: 400 });
     }
 
+    await ctx.runMutation(
+      internal.telegramHelpers.addMessageToContextInternal,
+      {
+        userId,
+        role: "user",
+        content: messageText,
+      },
+    );
+
     const categories = await ctx.runQuery(
       internal.telegramHelpers.getCategoriesInternal,
       { userId },
@@ -245,13 +265,23 @@ export const processMessage = httpAction(async (ctx, request) => {
       { userId },
     );
 
+    const conversationHistory = await ctx.runQuery(
+      internal.telegramHelpers.getUserConversationContextInternal,
+      { userId },
+    );
+
     const categoryList = categories.map((c) => c.name).join(", ");
     const cardList = cards.map((c) => c.name).join(", ");
+
+    const historyContext =
+      conversationHistory.length > 0
+        ? `\n\n### HISTÓRICO RECENTE (últimas ${conversationHistory.length} mensagens):\n${conversationHistory.map((m) => `${m.role === "user" ? "Usuário" : "Assistente"}: ${m.content}`).join("\n")}`
+        : "";
 
     let response: Response;
     let lastError: Error | null = null;
 
-    const enrichedPrompt = `${SYSTEM_PROMPT}\n\n### CATEGORIAS CADASTRADAS DO USUÁRIO:\n${categoryList || "Nenhuma categoria cadastrada"}\n\n### CARTÕES CADASTRADOS DO USUÁRIO:\n${cardList || "Nenhum cartão cadastrado"}\n\n_use estes nomes de cartões para buscar o cardName correto_`;
+    const enrichedPrompt = `${SYSTEM_PROMPT}\n\n### CATEGORIAS CADASTRADAS DO USUÁRIO:\n${categoryList || "Nenhuma categoria cadastrada"}\n\n### CARTÕES CADASTRADOS DO USUÁRIO:\n${cardList || "Nenhum cartão cadastrado"}\n\n_use estes nomes de cartões para buscar o cardName correto_${historyContext}`;
 
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
@@ -455,6 +485,15 @@ export const processMessage = httpAction(async (ctx, request) => {
     }
 
     const finalMessage = actionResult || parsed.userMessage;
+
+    await ctx.runMutation(
+      internal.telegramHelpers.addMessageToContextInternal,
+      {
+        userId,
+        role: "assistant",
+        content: finalMessage,
+      },
+    );
 
     return new Response(
       JSON.stringify({
