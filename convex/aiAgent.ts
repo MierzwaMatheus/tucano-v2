@@ -1,34 +1,224 @@
 import { httpAction } from "./_generated/server";
 import { internal } from "./_generated/api";
-import { Id, Doc } from "./_generated/dataModel";
+import { Id } from "./_generated/dataModel";
+import * as useCases from "./telegramUseCases";
 
 const SYSTEM_PROMPT = `Você é o assistente do Tucano Finanças, um app de gestão financeira pessoal.
 
-O usuário pode pedir para:
+### PAPEL
+Você é um assistente financeiro pessoal. Seu objetivo é ajudar o usuário a gerenciar suas finanças através de comandos simples em linguagem natural.
 
-1. **Criar lista de compras**: "cria lista de compras de abril", "nova lista de compras", "lista de maio"
-2. **Adicionar item à lista**: "adiciona arroz à lista", "compra arroz 5kg", "põe leite na lista"
-3. **Adicionar transação**: "gastei 50 de alimentação", "recebi 3000 de salário", "comprei café por 15 reais"
-4. **Consultar informações**: "quanto gastei esse mês?", "mostra minhas listas", "qual meu saldo?"
+### INSTRUÇÕES
+Siga o passo a passo para entender e processar cada solicitação:
 
-Sempre responda em português brasileiro de forma concisa.
+1. **Analise a mensagem do usuário** - Identifique a intenção principal
+2. **Extraia os parâmetros necessários** - Converta para o formato esperado
+3. **Escolha a action correta** - Selecione a ação mais adequada
+4. **Responda ao usuário** - Forneça feedback claro e conciso
 
+### CAPACIDADES DISPONÍVEIS
+
+#### 1. LISTAS DE COMPRAS
+- **Criar lista**: "cria lista de compras de abril", "nova lista", "lista de maio 2026"
+- **Adicionar item**: "adiciona arroz à lista", "compra arroz 5kg por 20 reais", "põe leite na lista"
+- **Ver itens**: "mostra itens da lista de abril", "o que tem na lista?"
+- **Ver todas as listas**: "mostra minhas listas", "quais listas tenho?"
+
+#### 2. TRANSAÇÕES
+- **Despesa simples**: "gastei 50 de alimentação", "comprei café por 15 reais", "paguei conta"
+- **Receita**: "recebi 3000 de salário", "ganhei bônus de 500"
+- **Despesa no cartão**: "gastei 200 no Nubank", "comprei no cartão Nubank 300"
+- **Parcelas**: "gastei 1000 em 5x no cartão", "comprei TV 3000 em 10x"
+- **Assinatura/Recorrente**: "assinei Netflix 55", "plano mensal de 30"
+- **Com competência**: "gastei 200 em março", "conta de luz de fevereiro"
+
+#### 3. CONSULTAS
+- **Resumo mensal**: "quanto gastei esse mês?", "mostra meu resumo"
+- **Transações**: "mostra minhas transações", "minhas despesas", "minhas receitas"
+- **Por cartão**: "transações do Nubank", "gastos no cartão"
+- **Por período**: "gastos de março", "receitas de janeiro"
+- **Cartões**: "meus cartões", "quais cartões tenho?"
+- **Categorias**: "quais categorias tenho?", "mostra minhas categorias"
+
+### FORMATO DE RESPOSTA
 Retorne APENAS JSON válido com este formato:
 {"action": "tipo", "params": {...}, "userMessage": "sua resposta ao usuário"}
 
-Tipos de action:
+### TIPOS DE ACTION DISPONÍVEIS
+
+#### Lista de Compras:
 - "shopping_list_create": {"name": string, "month"?: number, "year"?: number, "budgetCents"?: number}
 - "shopping_item_add": {"listName"?: string, "name": string, "quantity"?: number, "unit"?: string, "unitPriceCents"?: number}
-- "transaction_add": {"type": "income"|"expense", "amountCents": number, "name": string, "description"?: string}
+- "shopping_list_items": {"listName"?: string}
+- "query_all_lists": {}
+
+#### Transações:
+- "transaction_add": {"type": "income"|"expense", "amountCents": number, "name": string, "categoryName"?: string, "description"?: string, "isPaid"?: boolean}
+- "transaction_add_credit": {"type": "income"|"expense", "amountCents": number, "name": string, "cardName": string, "categoryName"?: string, "installments"?: number, "description"?: string, "competenceMonth"?: number, "competenceYear"?: number, "isPaid"?: boolean}
+- "transaction_add_recurring": {"type": "income"|"expense", "amountCents": number, "name": string, "isSubscription": boolean, "categoryName"?: string, "description"?: string, "competenceMonth"?: number, "competenceYear"?: number, "isPaid"?: boolean}
+
+#### Consultas:
 - "query_month_summary": {}
+- "query_transactions": {"month"?: number, "year"?: number, "type"?: "income"|"expense", "limit"?: number}
+- "query_card_transactions": {"cardName": string, "month"?: number, "year"?: number}
+- "query_credit_cards": {}
 - "query_active_lists": {}
+- "query_categories": {}
+
+#### Fallback:
 - "unknown": {}
 
-Regras:
-- Para transações: "gastei", "comprei", "paguei" = expense; "recebi", "ganhei" = income
-- Para quantias: "50 reais" = 5000 centavos, "1.5 mil" = 150000 centavos
-- Se não tem mês/ano explícito, use o mês/ano atual
+### REGRAS DE INTERPRETAÇÃO
+
+#### Para transações:
+- "gastei", "comprei", "paguei", "despesa" = expense
+- "recebi", "ganhei", "receita" = income
+- Para cartão: identifique o nome do cartão (Nubank, Itaú, etc) e use transaction_add_credit
+- Para parcelas: "em 3x", "5x", "parcelado" = installments
+- Para recorrente: "assinatura", "mensal", "recorrente", "plano" = isSubscription
+- Para pagamento: se o usuário dizer "já pago", "paguei", "foi pago" → isPaid: true
+- Por padrão: transações são criadas como "pendente" (pending), não como pagas
+- Apenas transações à vista (sem cartão) podem ser criadas como "pagas" (paid) se explicitamente mencionado
+
+#### Para quantias:
+- "50 reais" = 5000 centavos
+- "1.5 mil" = 150000 centavos
+- "300" = 30000 centavos
+
+#### Para datas:
+- Se não especificado, use mês/ano atual
+- "de março", "de março/2026" = competência específica
+
+#### Para cartões:
+- O modelo deve reconhecer nomes comuns: Nubank, Itaú, Bradesco, Santander, etc.
+- Se o usuário mencionar um cartão, procure pelo nome nas funções disponíveis
+
+#### Para categorias:
+- O sistema tem categorias cadastradas pelo usuário
+- Você deve SEMPRE buscar a melhor categoria para cada transação, mesmo que o usuário não mencione explicitamente
+- Analise o nome/descrição da transação e associe à categoria mais adequada
+- Use "categoryName" nos params com o nome da categoria mais adequada
+- Categorias disponíveis serão informadas no contexto da conversa
+
+### CATEGORIAS DISPONÍVEIS (sempre use para associar):
+- Liste as categorias disponíveis para context (quando aplicável)
+- Exemplos de associação automática:
+  - "Netflix" → Streaming ou Assinatura
+  - "Uber" → Transporte
+  - "Supermercado" → Alimentação
+  - "Salário" → Renda
+  - "Aluguel" → Moradia
+  - "Luz", "Água" → Contas
+  - "Farmácia" → Saúde
+  - "Presente" → Presentes
+  - "Academia" → Saúde/Bem-estar
+
+#### Fallback:
 - Se não conseguir entender, retorne action "unknown" com userMessage explicando`;
+
+function validateActionParams(
+  action: string,
+  params: Record<string, unknown>,
+): void {
+  if (action === "transaction_add") {
+    if (
+      !params.type ||
+      !["income", "expense"].includes(params.type as string)
+    ) {
+      throw new Error(
+        "transaction_add: type is required and must be income or expense",
+      );
+    }
+    if (typeof params.amountCents !== "number" || params.amountCents <= 0) {
+      throw new Error("transaction_add: amountCents must be a positive number");
+    }
+    if (typeof params.name !== "string") {
+      throw new Error("transaction_add: name must be a string");
+    }
+  }
+
+  if (action === "transaction_add_credit") {
+    if (
+      !params.type ||
+      !["income", "expense"].includes(params.type as string)
+    ) {
+      throw new Error(
+        "transaction_add_credit: type is required and must be income or expense",
+      );
+    }
+    if (typeof params.amountCents !== "number" || params.amountCents <= 0) {
+      throw new Error(
+        "transaction_add_credit: amountCents must be a positive number",
+      );
+    }
+    if (typeof params.name !== "string") {
+      throw new Error("transaction_add_credit: name must be a string");
+    }
+    if (typeof params.cardName !== "string") {
+      throw new Error("transaction_add_credit: cardName is required");
+    }
+  }
+
+  if (action === "transaction_add_recurring") {
+    if (
+      !params.type ||
+      !["income", "expense"].includes(params.type as string)
+    ) {
+      throw new Error(
+        "transaction_add_recurring: type is required and must be income or expense",
+      );
+    }
+    if (typeof params.amountCents !== "number" || params.amountCents <= 0) {
+      throw new Error(
+        "transaction_add_recurring: amountCents must be a positive number",
+      );
+    }
+    if (typeof params.name !== "string") {
+      throw new Error("transaction_add_recurring: name must be a string");
+    }
+    if (typeof params.isSubscription !== "boolean") {
+      throw new Error(
+        "transaction_add_recurring: isSubscription is required and must be boolean",
+      );
+    }
+  }
+
+  if (action === "shopping_item_add") {
+    if (typeof params.name !== "string") {
+      throw new Error("shopping_item_add: name is required");
+    }
+  }
+
+  if (action === "query_card_transactions") {
+    if (typeof params.cardName !== "string") {
+      throw new Error("query_card_transactions: cardName is required");
+    }
+  }
+}
+
+export function parseActionParams(
+  action: string,
+  rawParams: Record<string, unknown>,
+): Record<string, unknown> {
+  const params: Record<string, unknown> = { ...rawParams };
+
+  if (
+    action === "transaction_add" ||
+    action === "transaction_add_credit" ||
+    action === "transaction_add_recurring"
+  ) {
+    if (typeof params.amountCents === "string") {
+      const parsed = parseFloat(params.amountCents.replace(",", "."));
+      if (!isNaN(parsed)) {
+        params.amountCents = Math.round(parsed * 100);
+      }
+    }
+  }
+
+  return params;
+}
+
+export { validateActionParams };
 
 export const processMessage = httpAction(async (ctx, request) => {
   try {
@@ -42,8 +232,23 @@ export const processMessage = httpAction(async (ctx, request) => {
       return new Response("Mensagem ou userId ausente", { status: 400 });
     }
 
+    const categories = await ctx.runQuery(
+      internal.telegramHelpers.getCategoriesInternal,
+      { userId },
+    );
+
+    const cards = await ctx.runQuery(
+      internal.telegramHelpers.getCreditCardsInternal,
+      { userId },
+    );
+
+    const categoryList = categories.map((c) => c.name).join(", ");
+    const cardList = cards.map((c) => c.name).join(", ");
+
     let response: Response;
     let lastError: Error | null = null;
+
+    const enrichedPrompt = `${SYSTEM_PROMPT}\n\n### CATEGORIAS CADASTRADAS DO USUÁRIO:\n${categoryList || "Nenhuma categoria cadastrada"}\n\n### CARTÕES CADASTRADOS DO USUÁRIO:\n${cardList || "Nenhum cartão cadastrado"}\n\n_use estes nomes de cartões para buscar o cardName correto_`;
 
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
@@ -60,7 +265,7 @@ export const processMessage = httpAction(async (ctx, request) => {
             body: JSON.stringify({
               model: "qwen/qwen3.5-9b",
               messages: [
-                { role: "system", content: SYSTEM_PROMPT },
+                { role: "system", content: enrichedPrompt },
                 { role: "user", content: message },
               ],
               temperature: 0.3,
@@ -131,112 +336,116 @@ export const processMessage = httpAction(async (ctx, request) => {
       };
     }
 
+    const rawParams = parsed.params;
+    const params = parseActionParams(parsed.action, rawParams);
+
+    try {
+      validateActionParams(parsed.action, params);
+    } catch (validationError) {
+      console.error("[Telegram] Validation error:", validationError);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Parâmetros inválidos",
+          details:
+            validationError instanceof Error
+              ? validationError.message
+              : String(validationError),
+        }),
+        { status: 400 },
+      );
+    }
+
     let actionResult = "";
 
     if (parsed.action === "shopping_list_create") {
-      const now = new Date();
-      const month = (parsed.params.month as number) ?? now.getMonth() + 1;
-      const year = (parsed.params.year as number) ?? now.getFullYear();
-      const name = (parsed.params.name as string) ?? `Lista ${month}/${year}`;
-      const budgetCents = (parsed.params.budgetCents as number) ?? 0;
-
-      const listId = await ctx.runMutation(
-        internal.telegramHelpers.createShoppingListInternal,
-        {
-          userId,
-          name,
-          month,
-          year,
-          budgetCents,
-        },
-      );
-
-      actionResult = `Lista "${name}" criada com sucesso!`;
-    } else if (parsed.action === "shopping_item_add") {
-      const listName = parsed.params.listName as string | undefined;
-      const itemName = parsed.params.name as string;
-      const quantity = (parsed.params.quantity as number) ?? 1;
-      const unit = (parsed.params.unit as string) ?? "un";
-      const unitPriceCents = (parsed.params.unitPriceCents as number) ?? 0;
-
-      const listId = await ctx.runQuery(
-        internal.telegramHelpers.findActiveShoppingListInternal,
-        {
-          userId,
-          listName: listName ?? undefined,
-        },
-      );
-
-      if (!listId) {
-        actionResult =
-          "Nenhuma lista de compras ativa encontrada. Crie uma primeiro!";
-      } else {
-        await ctx.runMutation(
-          internal.telegramHelpers.addShoppingItemInternal,
-          {
-            userId,
-            listId,
-            name: itemName,
-            unit,
-            quantity,
-            unitPriceCents,
-          },
-        );
-
-        actionResult = `"${itemName}" adicionado à lista!`;
-      }
-    } else if (parsed.action === "transaction_add") {
-      const type = parsed.params.type as "income" | "expense";
-      const amountCents = parsed.params.amountCents as number;
-      const name = (parsed.params.name as string) ?? "Transação";
-      const description = parsed.params.description as string | undefined;
-
-      await ctx.runMutation(internal.telegramHelpers.addTransactionInternal, {
-        userId,
-        type,
-        name,
-        amountCents,
-        date: Date.now(),
-        description,
+      actionResult = await useCases.executeShoppingListCreate(ctx, userId, {
+        name: params.name as string,
+        month: params.month as number | undefined,
+        year: params.year as number | undefined,
+        budgetCents: params.budgetCents as number | undefined,
       });
-
-      const typeText = type === "income" ? "receita" : "despesa";
-      actionResult = `${typeText} de R$ ${(amountCents / 100).toFixed(2)} adicionada!`;
+    } else if (parsed.action === "shopping_item_add") {
+      actionResult = await useCases.executeShoppingItemAdd(ctx, userId, {
+        listName: params.listName as string | undefined,
+        name: params.name as string,
+        quantity: params.quantity as number | undefined,
+        unit: params.unit as string | undefined,
+        unitPriceCents: params.unitPriceCents as number | undefined,
+      });
+    } else if (parsed.action === "transaction_add") {
+      actionResult = await useCases.executeTransactionAdd(ctx, userId, {
+        type: params.type as "income" | "expense",
+        amountCents: params.amountCents as number,
+        name: params.name as string,
+        categoryName: params.categoryName as string | undefined,
+        description: params.description as string | undefined,
+        isPaid: params.isPaid as boolean | undefined,
+      });
     } else if (parsed.action === "query_month_summary") {
-      const now = new Date();
-      const summary = await ctx.runQuery(
-        internal.telegramHelpers.getMonthSummaryInternal,
+      actionResult = await useCases.executeQueryMonthSummary(ctx, userId);
+    } else if (parsed.action === "query_active_lists") {
+      actionResult = await useCases.executeQueryActiveLists(ctx, userId);
+    } else if (parsed.action === "query_credit_cards") {
+      actionResult = await useCases.executeQueryCreditCards(ctx, userId);
+    } else if (parsed.action === "query_categories") {
+      actionResult = await useCases.executeQueryCategories(ctx, userId);
+    } else if (parsed.action === "transaction_add_credit") {
+      actionResult = await useCases.executeTransactionAddCredit(ctx, userId, {
+        type: params.type as "income" | "expense",
+        amountCents: params.amountCents as number,
+        name: params.name as string,
+        cardName: params.cardName as string,
+        installments: params.installments as number | undefined,
+        description: params.description as string | undefined,
+        categoryName: params.categoryName as string | undefined,
+        competenceMonth: params.competenceMonth as number | undefined,
+        competenceYear: params.competenceYear as number | undefined,
+        isPaid: params.isPaid as boolean | undefined,
+      });
+    } else if (parsed.action === "transaction_add_recurring") {
+      actionResult = await useCases.executeTransactionAddRecurring(
+        ctx,
+        userId,
         {
-          userId,
-          month: now.getMonth() + 1,
-          year: now.getFullYear(),
+          type: params.type as "income" | "expense",
+          amountCents: params.amountCents as number,
+          name: params.name as string,
+          isSubscription: params.isSubscription as boolean,
+          description: params.description as string | undefined,
+          categoryName: params.categoryName as string | undefined,
+          competenceMonth: params.competenceMonth as number | undefined,
+          competenceYear: params.competenceYear as number | undefined,
+          isPaid: params.isPaid as boolean | undefined,
         },
       );
-
-      actionResult =
-        `📊 Resumo do mês:\n` +
-        `💰 Receitas: R$ ${(summary.totalIncome / 100).toFixed(2)}\n` +
-        `💸 Despesas: R$ ${(summary.totalExpense / 100).toFixed(2)}\n` +
-        `📈 Saldo: R$ ${(summary.balance / 100).toFixed(2)}\n` +
-        `⏳ Pendente: R$ ${(summary.pending / 100).toFixed(2)}`;
-    } else if (parsed.action === "query_active_lists") {
-      const lists = await ctx.runQuery(
-        internal.telegramHelpers.getUserActiveListsInternal,
-        { userId },
+    } else if (parsed.action === "query_transactions") {
+      actionResult = await useCases.executeQueryTransactions(ctx, userId, {
+        month: params.month as number | undefined,
+        year: params.year as number | undefined,
+        type: params.type as "income" | "expense" | undefined,
+        limit: params.limit as number | undefined,
+      });
+    } else if (parsed.action === "query_card_transactions") {
+      actionResult = await useCases.executeQueryCardTransactions(ctx, userId, {
+        cardName: params.cardName as string,
+        month: params.month as number | undefined,
+        year: params.year as number | undefined,
+      });
+    } else if (parsed.action === "shopping_list_items") {
+      actionResult = await useCases.executeQueryShoppingListItems(
+        ctx,
+        userId,
+        params.listName as string | undefined,
       );
-
-      if (lists.length === 0) {
-        actionResult = "Nenhuma lista de compras ativa.";
-      } else {
-        actionResult =
-          "📝 Listas ativas:\n" +
-          lists
-            .map(
-              (l: Doc<"shoppingLists">) =>
-                `• ${l.name} - R$ ${(l.totalCents / 100).toFixed(2)} (${l.month}/${l.year})`,
-            )
-            .join("\n");
-      }
+    } else if (parsed.action === "query_all_lists") {
+      actionResult = await useCases.executeQueryAllLists(ctx, userId);
+    } else if (parsed.action === "unknown") {
+      actionResult =
+        parsed.userMessage ||
+        "Não consegui entender sua solicitação. Pode reformular?";
+    } else {
+      actionResult = `Ação "${parsed.action}" não reconhecida.`;
     }
 
     const finalMessage = parsed.userMessage || actionResult;
@@ -252,6 +461,7 @@ export const processMessage = httpAction(async (ctx, request) => {
       { status: 200 },
     );
   } catch (error) {
+    console.error("[Telegram] Internal error:", error);
     return new Response(
       JSON.stringify({
         error: "Erro interno",
