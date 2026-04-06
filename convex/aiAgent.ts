@@ -454,15 +454,13 @@ export const processMessage = httpAction(async (ctx, request) => {
       actionResult = `Ação "${parsed.action}" não reconhecida.`;
     }
 
-    const finalMessage = parsed.userMessage || actionResult;
+    const finalMessage = actionResult || parsed.userMessage;
 
     return new Response(
       JSON.stringify({
         success: true,
         action: parsed.action,
-        userMessage: actionResult
-          ? `${finalMessage}\n\n✅ ${actionResult}`
-          : finalMessage,
+        userMessage: finalMessage,
       }),
       { status: 200 },
     );
