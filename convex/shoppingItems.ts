@@ -18,11 +18,37 @@ export const addItem = mutation({
     if (!userId) throw new Error("Não autenticado");
 
     const totalCents = Math.round(args.unitPriceCents * args.quantity);
+    let finalCatalogItemId = args.catalogItemId;
+
+    if (args.catalogItemId && args.brand) {
+      const catalogItem = await ctx.db.get(args.catalogItemId);
+      if (catalogItem && catalogItem.defaultBrand !== args.brand) {
+        const newCatalogId = await ctx.db.insert("productCatalog", {
+          userId,
+          name: args.name,
+          nameLower: args.name.toLowerCase(),
+          defaultUnit: args.unit,
+          defaultBrand: args.brand,
+          categoryId: args.categoryId,
+          lastPriceCents: args.unitPriceCents,
+          priceHistory: [
+            {
+              priceCents: args.unitPriceCents,
+              date: Date.now(),
+              listId: args.listId,
+            },
+          ],
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+        finalCatalogItemId = newCatalogId;
+      }
+    }
 
     await ctx.db.insert("shoppingItems", {
       listId: args.listId,
       userId,
-      catalogItemId: args.catalogItemId,
+      catalogItemId: finalCatalogItemId,
       name: args.name,
       unit: args.unit,
       quantity: args.quantity,
@@ -41,13 +67,16 @@ export const addItem = mutation({
       });
     }
 
-    if (args.catalogItemId) {
-      const catalogItem = await ctx.db.get(args.catalogItemId);
-      if (catalogItem && catalogItem.lastPriceCents !== args.unitPriceCents) {
-        await ctx.db.patch(args.catalogItemId, {
+    if (finalCatalogItemId) {
+      const catalogItemToUpdate = await ctx.db.get(finalCatalogItemId);
+      if (
+        catalogItemToUpdate &&
+        catalogItemToUpdate.lastPriceCents !== args.unitPriceCents
+      ) {
+        await ctx.db.patch(finalCatalogItemId, {
           lastPriceCents: args.unitPriceCents,
           priceHistory: [
-            ...catalogItem.priceHistory,
+            ...catalogItemToUpdate.priceHistory,
             {
               priceCents: args.unitPriceCents,
               date: Date.now(),
@@ -57,7 +86,7 @@ export const addItem = mutation({
           updatedAt: Date.now(),
         });
       }
-    } else {
+    } else if (!args.catalogItemId && args.brand) {
       await ctx.db.insert("productCatalog", {
         userId,
         name: args.name,
