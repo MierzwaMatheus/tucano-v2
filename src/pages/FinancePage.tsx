@@ -4,16 +4,11 @@ import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import {
   Plus,
-  TrendingUp,
-  TrendingDown,
-  Wallet,
-  Clock,
   CheckCircle2,
   Circle,
   Trash2,
   CreditCard,
   RefreshCw,
-  Layers,
   BadgeCheck,
   ChevronDown,
   ChevronUp,
@@ -162,34 +157,26 @@ export function FinancePage() {
 
       {/* Summary cards */}
       {summary && (
-        <div className="grid grid-cols-2 gap-3 mb-5">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
           <SummaryCard
             label={SUMMARY_LABELS.INCOMES}
             value={summary.totalIncome}
-            icon={<TrendingUp size={18} />}
             color="text-status-success"
-            bg="bg-accent-subtle"
           />
           <SummaryCard
             label={SUMMARY_LABELS.EXPENSES}
             value={summary.totalExpense}
-            icon={<TrendingDown size={18} />}
             color="text-status-error"
-            bg="bg-status-error/10"
           />
           <SummaryCard
             label={SUMMARY_LABELS.BALANCE}
             value={summary.balance}
-            icon={<Wallet size={18} />}
             color={summary.balance >= 0 ? "text-accent" : "text-status-error"}
-            bg="bg-accent-subtle"
           />
           <SummaryCard
             label={SUMMARY_LABELS.PENDING}
             value={summary.pending}
-            icon={<Clock size={18} />}
             color="text-status-warning"
-            bg="bg-status-warning/10"
           />
         </div>
       )}
@@ -330,21 +317,14 @@ export function FinancePage() {
 function SummaryCard({
   label,
   value,
-  icon,
   color,
-  bg,
 }: {
   label: string;
   value: number;
-  icon: React.ReactNode;
   color: string;
-  bg: string;
 }) {
   return (
     <div className="bg-surface-card rounded-card border border-border-subtle shadow-card p-4">
-      <div className={`inline-flex p-2 rounded-button ${bg} ${color} mb-2`}>
-        {icon}
-      </div>
       <div className="text-xs text-text-muted mb-0.5">{label}</div>
       <div className={`font-bold text-lg ${color}`}>{formatBRL(value)}</div>
     </div>
