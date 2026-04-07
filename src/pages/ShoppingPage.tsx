@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
@@ -11,6 +11,7 @@ import {
   ChevronRight,
   ArrowLeft,
   Package,
+  Pencil,
 } from "lucide-react";
 import { formatBRL, toCents, fromCents } from "../lib/currency";
 import { MONTHS } from "../lib/dates";
@@ -358,12 +359,16 @@ function ListDetail({
   const data = useQuery(api.shoppingLists.getWithItems, { listId });
   const addItem = useMutation(api.shoppingItems.addItem);
   const togglePurchased = useMutation(api.shoppingItems.togglePurchased);
+  const updateItem = useMutation(api.shoppingItems.updateItem);
   const deleteItem = useMutation(api.shoppingItems.deleteItem);
   const completeList = useMutation(api.shoppingLists.complete);
   const catalogResults = useQuery(api.productCatalog.search, { term: "" });
   const categories = useQuery(api.categories.list, { type: "shopping" }) ?? [];
 
   const [showAdd, setShowAdd] = useState(false);
+  const [editingItem, setEditingItem] = useState<(typeof items)[0] | null>(
+    null,
+  );
   const [searchTerm, setSearchTerm] = useState("");
   const searchResults = useQuery(api.productCatalog.search, {
     term: searchTerm,
@@ -388,6 +393,20 @@ function ListDetail({
       [form],
     ),
   );
+
+  useEffect(() => {
+    if (editingItem) {
+      setForm({
+        name: editingItem.name,
+        unit: editingItem.unit,
+        quantity: String(editingItem.quantity),
+        price: String(fromCents(editingItem.unitPriceCents)),
+        brand: editingItem.brand || "",
+        catalogItemId: editingItem.catalogItemId,
+        categoryId: editingItem.categoryId,
+      });
+    }
+  }, [editingItem]);
 
   if (!data) {
     return (
@@ -531,6 +550,7 @@ function ListDetail({
                 item={item}
                 onToggle={() => togglePurchased({ itemId: item._id })}
                 onDelete={() => deleteItem({ id: item._id })}
+                onEdit={() => setEditingItem(item)}
               />
             ))}
           </div>
@@ -550,6 +570,7 @@ function ListDetail({
                 item={item}
                 onToggle={() => togglePurchased({ itemId: item._id })}
                 onDelete={() => deleteItem({ id: item._id })}
+                onEdit={() => setEditingItem(item)}
               />
             ))}
           </div>
@@ -764,6 +785,136 @@ function ListDetail({
           </div>
         </ResponsiveModal>
       )}
+
+      {editingItem && (
+        <ResponsiveModal
+          title="Editar Item"
+          onClose={() => setEditingItem(null)}
+          isOpen={!!editingItem}
+        >
+          <div className="space-y-4">
+            <div>
+              <label
+                htmlFor="edit-item-name"
+                className="block text-sm font-medium text-text-secondary mb-1"
+              >
+                {FORM_LABELS.NAME_REQUIRED}
+              </label>
+              <input
+                id="edit-item-name"
+                className="w-full px-3 py-2.5 rounded-input bg-surface-elevated border border-border text-text-primary focus:border-accent outline-none"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label
+                  htmlFor="edit-item-quantity"
+                  className="block text-sm font-medium text-text-secondary mb-1"
+                >
+                  {FORM_LABELS.QUANTITY}
+                </label>
+                <input
+                  id="edit-item-quantity"
+                  type="number"
+                  step="0.001"
+                  min="0.001"
+                  className="w-full px-3 py-2.5 rounded-input bg-surface-elevated border border-border text-text-primary focus:border-accent outline-none"
+                  value={form.quantity}
+                  onChange={(e) =>
+                    setForm({ ...form, quantity: e.target.value })
+                  }
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="edit-item-unit"
+                  className="block text-sm font-medium text-text-secondary mb-1"
+                >
+                  {FORM_LABELS.UNIT}
+                </label>
+                <select
+                  id="edit-item-unit"
+                  className="w-full px-3 py-2.5 rounded-input bg-surface-elevated border border-border text-text-primary focus:border-accent outline-none"
+                  value={form.unit}
+                  onChange={(e) => setForm({ ...form, unit: e.target.value })}
+                >
+                  {["un", "kg", "g", "L", "mL", "cx", "pct", "dz"].map((u) => (
+                    <option key={u} value={u}>
+                      {u}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label
+                htmlFor="edit-item-price"
+                className="block text-sm font-medium text-text-secondary mb-1"
+              >
+                {FORM_LABELS.UNIT_PRICE}
+              </label>
+              <input
+                id="edit-item-price"
+                type="text"
+                inputMode="numeric"
+                className="w-full px-3 py-2.5 rounded-input bg-surface-elevated border border-border text-text-primary placeholder-text-muted focus:border-accent outline-none"
+                value={formatMonetaryValue(form.price)}
+                onChange={handlePriceChange}
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="edit-item-brand"
+                className="block text-sm font-medium text-text-secondary mb-1"
+              >
+                {FORM_LABELS.BRAND}
+              </label>
+              <input
+                id="edit-item-brand"
+                className="w-full px-3 py-2.5 rounded-input bg-surface-elevated border border-border text-text-primary placeholder-text-muted focus:border-accent outline-none"
+                placeholder="Ex: Marca X"
+                value={form.brand}
+                onChange={(e) => setForm({ ...form, brand: e.target.value })}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-1">
+                {CATEGORY_SELECT.PLACEHOLDER}
+              </label>
+              <CategorySelect
+                value={form.categoryId}
+                onChange={(id) => setForm({ ...form, categoryId: id })}
+                categories={categories}
+              />
+            </div>
+
+            <button
+              type="submit"
+              onClick={async () => {
+                if (!form.name.trim() || !form.price) return;
+                await updateItem({
+                  id: editingItem._id,
+                  quantity: parseFloat(form.quantity) || 1,
+                  unitPriceCents: toCents(parseFloat(form.price) || 0),
+                  brand: form.brand || undefined,
+                  categoryId: form.categoryId,
+                });
+                setEditingItem(null);
+              }}
+              disabled={!form.name.trim() || !form.price}
+              className="w-full py-3 bg-accent text-surface-page rounded-button font-semibold hover:bg-accent-hover transition-colors disabled:opacity-50"
+            >
+              {ACTIONS.SAVE}
+            </button>
+          </div>
+        </ResponsiveModal>
+      )}
     </div>
   );
 }
@@ -772,6 +923,7 @@ function ItemRow({
   item,
   onToggle,
   onDelete,
+  onEdit,
 }: {
   item: {
     _id: Id<"shoppingItems">;
@@ -786,6 +938,7 @@ function ItemRow({
   };
   onToggle: () => void;
   onDelete: () => void;
+  onEdit: () => void;
 }) {
   return (
     <div className="bg-surface-card rounded-card border border-border-subtle shadow-card flex items-center gap-3 px-4 py-3">
@@ -840,6 +993,12 @@ function ItemRow({
         className="flex-shrink-0 p-1.5 text-text-muted hover:text-status-error transition-colors"
       >
         <Trash2 size={15} />
+      </button>
+      <button
+        onClick={onEdit}
+        className="flex-shrink-0 p-1.5 text-text-muted hover:text-accent transition-colors"
+      >
+        <Pencil size={15} />
       </button>
     </div>
   );
