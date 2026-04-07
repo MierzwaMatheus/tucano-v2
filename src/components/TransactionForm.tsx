@@ -42,6 +42,7 @@ interface TransactionFormProps {
   }>;
   creditCards: Array<{ _id: Id<"creditCards">; name: string }>;
   onSubmit: () => void;
+  isEditing?: boolean;
 }
 
 export const TransactionForm = React.memo(function TransactionForm({
@@ -50,6 +51,7 @@ export const TransactionForm = React.memo(function TransactionForm({
   availableCategories,
   creditCards,
   onSubmit,
+  isEditing = false,
 }: TransactionFormProps): React.ReactElement {
   const handleAmountChange = useMonetaryInput(
     form.amount,
@@ -293,7 +295,7 @@ export const TransactionForm = React.memo(function TransactionForm({
         className="w-full py-3 bg-accent text-surface-page rounded-button font-semibold hover:bg-accent-hover transition-colors disabled:opacity-50"
         aria-disabled={!form.name.trim() || !form.amount}
       >
-        {ACTIONS.ADD}
+        {isEditing ? ACTIONS.SAVE : ACTIONS.ADD}
       </button>
     </div>
   );

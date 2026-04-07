@@ -12,6 +12,7 @@ import {
   BadgeCheck,
   ChevronDown,
   ChevronUp,
+  Pencil,
 } from "lucide-react";
 import { formatBRL, toCents, fromCents } from "../lib/currency";
 import {
@@ -39,6 +40,15 @@ export function FinancePage() {
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [year, setYear] = useState(now.getFullYear());
   const [showAdd, setShowAdd] = useState(false);
+  const [editTarget, setEditTarget] = useState<{
+    id: Id<"transactions">;
+    name: string;
+    amountCents: number;
+    description?: string;
+    categoryId?: string;
+    status: "pending" | "paid";
+    includeInStats: boolean;
+  } | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{
     id: Id<"transactions">;
     hasGroup: boolean;
@@ -54,6 +64,7 @@ export function FinancePage() {
   const creditCards = useQuery(api.creditCards.list) ?? [];
 
   const addTransaction = useMutation(api.transactions.addTransaction);
+  const editTransaction = useMutation(api.transactions.editTransaction);
   const toggleStatus = useMutation(api.transactions.toggleStatus);
   const deleteTransaction = useMutation(api.transactions.deleteTransaction);
 
@@ -131,6 +142,76 @@ export function FinancePage() {
     setDeleteMode("single");
   }
 
+  function handleEditClick(tx: {
+    _id: Id<"transactions">;
+    name: string;
+    amountCents: number;
+    description?: string;
+    category?: { name: string; color?: string; icon?: string } | null;
+    status: "pending" | "paid";
+    includeInStats: boolean;
+  }) {
+    const categoryId = tx.category
+      ? (tx.category as unknown as { _id: string })._id
+      : undefined;
+    setEditTarget({
+      id: tx._id,
+      name: tx.name,
+      amountCents: tx.amountCents,
+      description: tx.description,
+      categoryId,
+      status: tx.status,
+      includeInStats: tx.includeInStats,
+    });
+    setForm((prev) => ({
+      ...prev,
+      name: tx.name,
+      amount: (tx.amountCents / 100).toString(),
+      description: tx.description || "",
+      categoryId: categoryId || "",
+      status: tx.status,
+      includeInStats: tx.includeInStats,
+    }));
+    setShowAdd(true);
+  }
+
+  async function handleEditSubmit() {
+    if (!editTarget || !form.name.trim() || !form.amount) return;
+    try {
+      const amountCents = Math.round(
+        parseFloat(form.amount.replace(",", ".")) * 100,
+      );
+      await editTransaction({
+        id: editTarget.id,
+        name: form.name,
+        amountCents,
+        description: form.description || undefined,
+        categoryId: form.categoryId as Id<"categories"> | undefined,
+        status: form.status,
+        includeInStats: form.includeInStats,
+      });
+      setEditTarget(null);
+      setShowAdd(false);
+      setForm({
+        type: "expense",
+        name: "",
+        amount: "",
+        date: new Date().toISOString().split("T")[0],
+        categoryId: "",
+        status: "pending",
+        isCredit: false,
+        creditCardId: "",
+        isRecurring: false,
+        isSubscription: false,
+        installments: "1",
+        includeInStats: true,
+        description: "",
+      });
+    } catch (error) {
+      console.error("Erro ao editar transação:", error);
+    }
+  }
+
   return (
     <div className="p-4 pb-24 max-w-2xl mx-auto">
       <div className="flex items-center justify-between mb-4">
@@ -194,6 +275,7 @@ export function FinancePage() {
                 tx={tx}
                 onToggle={() => toggleStatus({ id: tx._id })}
                 onDelete={() => handleDeleteClick(tx)}
+                onEdit={() => handleEditClick(tx)}
               />
             ))}
           </div>
@@ -213,6 +295,7 @@ export function FinancePage() {
                 tx={tx}
                 onToggle={() => toggleStatus({ id: tx._id })}
                 onDelete={() => handleDeleteClick(tx)}
+                onEdit={() => handleEditClick(tx)}
               />
             ))}
           </div>
@@ -255,8 +338,15 @@ export function FinancePage() {
 
       {showAdd && (
         <ResponsiveModal
-          title={MODAL_TITLES.NEW_TRANSACTION}
-          onClose={() => setShowAdd(false)}
+          title={
+            editTarget
+              ? MODAL_TITLES.EDIT_TRANSACTION
+              : MODAL_TITLES.NEW_TRANSACTION
+          }
+          onClose={() => {
+            setShowAdd(false);
+            setEditTarget(null);
+          }}
           isOpen={showAdd}
         >
           <TransactionForm
@@ -264,7 +354,8 @@ export function FinancePage() {
             setForm={setForm}
             availableCategories={availableCategories}
             creditCards={creditCards}
-            onSubmit={handleAdd}
+            onSubmit={editTarget ? handleEditSubmit : handleAdd}
+            isEditing={!!editTarget}
           />
         </ResponsiveModal>
       )}
@@ -331,11 +422,7 @@ function SummaryCard({
   );
 }
 
-function TransactionRow({
-  tx,
-  onToggle,
-  onDelete,
-}: {
+interface TransactionRowProps {
   tx: {
     _id: Id<"transactions">;
     name: string;
@@ -355,7 +442,15 @@ function TransactionRow({
   };
   onToggle: () => void;
   onDelete: () => void;
-}) {
+  onEdit: () => void;
+}
+
+function TransactionRow({
+  tx,
+  onToggle,
+  onDelete,
+  onEdit,
+}: TransactionRowProps) {
   const isIncome = tx.type === "income";
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const hasDescription = tx.description && tx.description.trim().length > 0;
@@ -445,6 +540,12 @@ function TransactionRow({
         {isIncome ? "+" : "-"}
         {formatBRL(tx.amountCents)}
       </div>
+      <button
+        onClick={onEdit}
+        className="flex-shrink-0 p-1.5 text-text-muted hover:text-accent transition-colors mt-0.5"
+      >
+        <Pencil size={15} />
+      </button>
       <button
         onClick={onDelete}
         className="flex-shrink-0 p-1.5 text-text-muted hover:text-status-error transition-colors mt-0.5"
