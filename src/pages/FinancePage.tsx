@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, ReactNode } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
@@ -56,6 +56,12 @@ export function FinancePage() {
   const [deleteMode, setDeleteMode] = useState<"single" | "thisAndFuture">(
     "single",
   );
+  const [expandedSections, setExpandedSections] = useState({
+    unpaidExpenses: true,
+    paidExpenses: false,
+    unpaidIncomes: true,
+    paidIncomes: false,
+  });
 
   const summary = useQuery(api.transactions.summarize, { month, year });
   const transactions =
@@ -68,8 +74,13 @@ export function FinancePage() {
   const toggleStatus = useMutation(api.transactions.toggleStatus);
   const deleteTransaction = useMutation(api.transactions.deleteTransaction);
 
-  const incomes = transactions.filter((t) => t.type === "income");
   const expenses = transactions.filter((t) => t.type === "expense");
+  const incomes = transactions.filter((t) => t.type === "income");
+
+  const unpaidExpenses = expenses.filter((t) => t.status === "pending");
+  const paidExpenses = expenses.filter((t) => t.status === "paid");
+  const unpaidIncomes = incomes.filter((t) => t.status === "pending");
+  const paidIncomes = incomes.filter((t) => t.status === "paid");
 
   const [form, setForm] = useState({
     type: "expense" as "income" | "expense",
@@ -91,6 +102,13 @@ export function FinancePage() {
     () => categories.filter((c) => c.type === form.type || c.type === "all"),
     [categories, form.type],
   );
+
+  function toggleSection(section: keyof typeof expandedSections) {
+    setExpandedSections((prev) => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
+  }
 
   async function handleAdd() {
     if (!form.name.trim() || !form.amount) return;
@@ -262,44 +280,84 @@ export function FinancePage() {
         </div>
       )}
 
-      {/* Incomes */}
-      {incomes.length > 0 && (
-        <div className="mb-4">
-          <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2 px-1">
-            {TYPE_LABELS.INCOME} ({incomes.length})
-          </h3>
-          <div className="space-y-2">
-            {incomes.map((tx) => (
-              <TransactionRow
-                key={tx._id}
-                tx={tx}
-                onToggle={() => toggleStatus({ id: tx._id })}
-                onDelete={() => handleDeleteClick(tx)}
-                onEdit={() => handleEditClick(tx)}
-              />
-            ))}
-          </div>
-        </div>
+      {/* Expenses - Unpaid */}
+      {unpaidExpenses.length > 0 && (
+        <CollapsibleSection
+          title={`${TYPE_LABELS.EXPENSE} - ${STATUS_LABELS.PENDING}`}
+          count={unpaidExpenses.length}
+          isExpanded={expandedSections.unpaidExpenses}
+          onToggle={() => toggleSection("unpaidExpenses")}
+        >
+          {unpaidExpenses.map((tx) => (
+            <TransactionRow
+              key={tx._id}
+              tx={tx}
+              onToggle={() => toggleStatus({ id: tx._id })}
+              onDelete={() => handleDeleteClick(tx)}
+              onEdit={() => handleEditClick(tx)}
+            />
+          ))}
+        </CollapsibleSection>
       )}
 
-      {/* Expenses */}
-      {expenses.length > 0 && (
-        <div className="mb-4">
-          <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2 px-1">
-            {TYPE_LABELS.EXPENSE} ({expenses.length})
-          </h3>
-          <div className="space-y-2">
-            {expenses.map((tx) => (
-              <TransactionRow
-                key={tx._id}
-                tx={tx}
-                onToggle={() => toggleStatus({ id: tx._id })}
-                onDelete={() => handleDeleteClick(tx)}
-                onEdit={() => handleEditClick(tx)}
-              />
-            ))}
-          </div>
-        </div>
+      {/* Expenses - Paid */}
+      {paidExpenses.length > 0 && (
+        <CollapsibleSection
+          title={`${TYPE_LABELS.EXPENSE} - ${STATUS_LABELS.PAID}`}
+          count={paidExpenses.length}
+          isExpanded={expandedSections.paidExpenses}
+          onToggle={() => toggleSection("paidExpenses")}
+        >
+          {paidExpenses.map((tx) => (
+            <TransactionRow
+              key={tx._id}
+              tx={tx}
+              onToggle={() => toggleStatus({ id: tx._id })}
+              onDelete={() => handleDeleteClick(tx)}
+              onEdit={() => handleEditClick(tx)}
+            />
+          ))}
+        </CollapsibleSection>
+      )}
+
+      {/* Incomes - Unpaid */}
+      {unpaidIncomes.length > 0 && (
+        <CollapsibleSection
+          title={`${TYPE_LABELS.INCOME} - ${STATUS_LABELS.PENDING}`}
+          count={unpaidIncomes.length}
+          isExpanded={expandedSections.unpaidIncomes}
+          onToggle={() => toggleSection("unpaidIncomes")}
+        >
+          {unpaidIncomes.map((tx) => (
+            <TransactionRow
+              key={tx._id}
+              tx={tx}
+              onToggle={() => toggleStatus({ id: tx._id })}
+              onDelete={() => handleDeleteClick(tx)}
+              onEdit={() => handleEditClick(tx)}
+            />
+          ))}
+        </CollapsibleSection>
+      )}
+
+      {/* Incomes - Paid */}
+      {paidIncomes.length > 0 && (
+        <CollapsibleSection
+          title={`${TYPE_LABELS.INCOME} - ${STATUS_LABELS.PAID}`}
+          count={paidIncomes.length}
+          isExpanded={expandedSections.paidIncomes}
+          onToggle={() => toggleSection("paidIncomes")}
+        >
+          {paidIncomes.map((tx) => (
+            <TransactionRow
+              key={tx._id}
+              tx={tx}
+              onToggle={() => toggleStatus({ id: tx._id })}
+              onDelete={() => handleDeleteClick(tx)}
+              onEdit={() => handleEditClick(tx)}
+            />
+          ))}
+        </CollapsibleSection>
       )}
 
       {transactions.length === 0 && (
@@ -552,6 +610,41 @@ function TransactionRow({
       >
         <Trash2 size={15} />
       </button>
+    </div>
+  );
+}
+
+interface CollapsibleSectionProps {
+  title: string;
+  count: number;
+  isExpanded: boolean;
+  onToggle: () => void;
+  children: ReactNode;
+}
+
+function CollapsibleSection({
+  title,
+  count,
+  isExpanded,
+  onToggle,
+  children,
+}: CollapsibleSectionProps) {
+  return (
+    <div className="mb-4">
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center justify-between px-1 py-2 hover:bg-surface-card/50 rounded-button transition-colors"
+      >
+        <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider">
+          {title} ({count})
+        </h3>
+        {isExpanded ? (
+          <ChevronUp size={16} className="text-text-muted" />
+        ) : (
+          <ChevronDown size={16} className="text-text-muted" />
+        )}
+      </button>
+      {isExpanded && <div className="space-y-2">{children}</div>}
     </div>
   );
 }
