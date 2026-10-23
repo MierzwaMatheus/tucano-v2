@@ -25,4 +25,6 @@ dist-ssr
 
 # Ignored for the template, you probably want to remove it:
 package-lock.json
-/testsprite_tests/tmp
+
+# Testes do TestSprite: têm credenciais de login, nunca versionar
+/testsprite_tests/
